@@ -6,17 +6,27 @@
       src="~assets/images/cover.jpg"
       alt="cover"
     >
-    <div class="topleft text-white" />
+    <div class="topleft text-white">
+      <div>
+        <Button @click="useRouter().push('/chat')">
+          Go chat Test
+        </Button>
+      </div>
+    </div>
+
     <div class="middle">
       <h1 class="font-bold">
         COMING SOON
       </h1>
+
       <hr>
+
       <p
         class="font-bold text-3xl"
       >
         {{ countDown }}
       </p>
+
       <p class="font-bold mt-4">
         By @juliolimareis and @barbarardfonseca
       </p>

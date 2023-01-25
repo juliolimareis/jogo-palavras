@@ -3,9 +3,12 @@ lockfileVersion: 5.4
 specifiers:
   '@babel/core': ^7.20.12
   '@babel/eslint-parser': ^7.19.1
+  '@headlessui/vue': ^1.7.7
+  '@heroicons/vue': ^2.0.13
   '@nuxt/postcss8': ^1.1.3
   '@nuxtjs/eslint-config-typescript': ^12.0.0
   '@nuxtjs/tailwindcss': ^6.2.0
+  '@types/uuid': ^9.0.0
   '@types/ws': ^8.5.4
   autoprefixer: ^10.4.13
   eslint: ^8.32.0
@@ -17,18 +20,23 @@ specifiers:
   postcss: ^8.4.21
   prettier: ^2.8.3
   tailwindcss: ^3.2.4
+  uuid: ^9.0.0
   ws: ^8.12.0
 
 dependencies:
   '@babel/core': 7.20.12
+  '@headlessui/vue': 1.7.7
+  '@heroicons/vue': 2.0.13
   '@nuxtjs/tailwindcss': 6.2.0
   '@types/ws': 8.5.4
+  uuid: 9.0.0
   ws: 8.12.0
 
 devDependencies:
   '@babel/eslint-parser': 7.19.1_2je5tsgpdnpnp4f5qs5fqust6m
   '@nuxt/postcss8': 1.1.3
   '@nuxtjs/eslint-config-typescript': 12.0.0_eslint@8.32.0
+  '@types/uuid': 9.0.0
   autoprefixer: 10.4.13_postcss@8.4.21
   eslint: 8.32.0
   eslint-config-prettier: 8.6.0_eslint@8.32.0
@@ -391,6 +399,19 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@headlessui/vue/1.7.7:
+    resolution: {integrity: sha512-dkdNhJkxyT9rXW5fHx/MkKaM3U13P3duYuwoGTRmDGjE7xAsvcWOSJRJpw1AmCQTvjZF44bh2wSlySLaHW+WuQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      vue: ^3.2.0
+    dev: false
+
+  /@heroicons/vue/2.0.13:
+    resolution: {integrity: sha512-vVCVF02+rNKXEmanVNnmktJlxCbOn0qVFP1gfZPn4bcBIwPX3h9AVHGCkwly+IWDEME8w5oooG0KRd2hhSe/HQ==}
+    peerDependencies:
+      vue: '>= 3'
+    dev: false
 
   /@humanwhocodes/config-array/0.11.8:
     resolution: {integrity: sha512-UybHIJzJnR5Qc/MsD9Kr+RpO2h+/P1GhOwdiLPXK5TWk5sgTdu88bTD9UP+CKbPPh5Rni1u0GjAdYQLemG8g+g==}
@@ -964,6 +985,10 @@ packages:
 
   /@types/semver/7.3.13:
     resolution: {integrity: sha512-21cFJr9z3g5dW8B0CVI9g2O9beqaThGQ6ZFBqHfwhzLDKUxaqTIy3vnfah/UPkfOiF2pLq+tGz+W8RyCskuslw==}
+    dev: true
+
+  /@types/uuid/9.0.0:
+    resolution: {integrity: sha512-kr90f+ERiQtKWMz5rP32ltJ/BtULDI5RVO0uavn1HQUOwjx0R1h0rnDYNL0CepF1zL5bSY6FISAfd9tOdDhU5Q==}
     dev: true
 
   /@types/ws/8.5.4:
@@ -6349,6 +6374,11 @@ packages:
 
   /util-deprecate/1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
+
+  /uuid/9.0.0:
+    resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
+    hasBin: true
+    dev: false
 
   /validate-npm-package-license/3.0.4:
     resolution: {integrity: sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==}

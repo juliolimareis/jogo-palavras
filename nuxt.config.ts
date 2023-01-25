@@ -4,8 +4,11 @@ export default defineNuxtConfig({
   css: [
     "@/assets/css/main.css",
   ],
-  modules: [
-    "~/modules/ws"
-  ],
 
+  build: { transpile: ["@heroicons/vue", "@headlessui/vue"] },
+  // modules: [
+  //   "~/modules/ws"
+  // ],
+
+  plugins: ["~/plugins/websocket.client.ts"]
 });

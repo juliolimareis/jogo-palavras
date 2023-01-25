@@ -1,0 +1,48 @@
+<template>
+  <!-- <Head>
+    <Title>Nuxt 3 Websocket</Title>
+  </Head> -->
+
+  <!-- <Header /> -->
+
+  <div class="h-screen w-full grid place-items-center bg-gray-200 dark:bg-black">
+    <span class="flex flex-col items-centers space-y-4">
+      <span class="text-slate-900 dark:text-gray-100">{{ message }}</span>
+      <button @click="sendMessage" class="bg-purple-500 text-gray-50 font-semibold px-5 py-2 rounded-lg">Click me to send random number</button>
+    </span>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { v4 as uuid } from "uuid"
+const uid = uuid()
+const { $socket } = useNuxtApp()
+
+const message = ref("check...")
+
+onMounted(() => {
+   $socket.onopen = () => {
+    localStorage.setItem(`connection-${uid}`, uid)
+    $socket.send(uid);
+  }
+
+  $socket.onmessage = ({ data }: any) => {
+    console.log("data", data);
+    message.value = data;
+  }
+
+  $socket.onclose = () => {
+    message.value = "disconnected";
+    console.log("disconnected");
+  }
+});
+
+const sendMessage = () => {
+  fetch("/api/sendMessage", {
+    method: "POST",
+    body: JSON.stringify({ message: Math.random(), sender: localStorage.getItem(`connection-${uid}`) }),
+  }).then(res => res.json()).then(data => {
+      console.log("sent")
+  });
+}
+</script>
