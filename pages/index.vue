@@ -6,13 +6,7 @@
       src="~assets/images/cover.jpg"
       alt="cover"
     >
-    <div class="topleft text-white">
-      <div>
-        <Button @click="useRouter().push('/chat')">
-          Go chat Test
-        </Button>
-      </div>
-    </div>
+    <div class="topleft text-white" />
 
     <div class="middle">
       <h1 class="font-bold">
@@ -26,6 +20,13 @@
       >
         {{ countDown }}
       </p>
+
+      <Button
+        class="m-3"
+        @click="useRouter().push('/chat')"
+      >
+        Chat
+      </Button>
 
       <p class="font-bold mt-4">
         By @juliolimareis and @barbarardfonseca

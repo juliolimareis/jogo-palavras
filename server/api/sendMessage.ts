@@ -1,15 +1,18 @@
-import WebSocket from "ws";
+import { ClientData, } from "~~/types";
 
 export default defineEventHandler(async (event) => {
-  const { message, sender } = await readBody(event);
+  const clientData = await readBody<ClientData>(event);
 
   if(globalThis?.clients){
-    globalThis.clients.forEach((client, isBinary) => {
-      if (client.id !== sender && client.readyState === WebSocket.OPEN) {
-        // console.log("Client", client)
-        client.send(message);
-      }
-    });
+    switch (clientData.channel) {
+    case "global-chat":
+      globalThis.clients.forEach(
+        (client) => client.ws.send(`${clientData.name}: ${clientData.data.message}`)
+      );
+      break;
+    default:
+      break;
+    }
   }
 
   return {
