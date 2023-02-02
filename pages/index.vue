@@ -1,11 +1,13 @@
 <template>
   <div
-    class="bgimg"
+    class="bgimg w-full h-full"
   >
     <img
+      class="w-full h-full"
       src="~assets/images/cover.jpg"
       alt="cover"
     >
+
     <div class="topleft text-white" />
 
     <div class="middle">
@@ -27,6 +29,12 @@
       >
         Chat
       </Button>
+      <Button
+        class="m-3 bg-green-500"
+        @click="useRouter().push('/home')"
+      >
+        Game
+      </Button>
 
       <p class="font-bold mt-4">
         By @juliolimareis and @barbarardfonseca
@@ -36,13 +44,13 @@
   </div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 // Set the date we're counting down to
 const countDownDate = new Date("Feb 28, 2023 15:37:25").getTime();
 const countDown = ref("35 days");
 
 // Update the count down every 1 second
-setInterval(() => {
+const interval = setInterval(() => {
   // Get todays date and time
   const now = new Date().getTime();
 
@@ -61,24 +69,21 @@ setInterval(() => {
 
   // If the count down is finished, write some text
   if (distance < 0) {
-    clearInterval(x);
+    clearInterval(interval);
     countDown.value = "EXPIRED";
   }
 }, 1000);
 
 </script>
 
-<style>
- /* Set height to 100% for body and html to enable the background image to cover the whole page: */
- body, html {
-  height: 100%
-}
+<style scoped>
 
 .bgimg {
   /* Background image */
   /* background-image: url('~assets/images/cover.jpg'); */
   /* Full-screen */
   height: 100%;
+  width: 100%;
   /* Center the background image */
   background-position: center;
   /* Scale and zoom in the image */

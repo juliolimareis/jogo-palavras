@@ -1,3 +1,5 @@
+room test: b675b85c-407e-493f-a8da-9c9c222164d8
+
 # Nuxt 3 Minimal Starter
 
 Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.

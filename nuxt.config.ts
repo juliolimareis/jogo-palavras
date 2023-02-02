@@ -5,10 +5,10 @@ export default defineNuxtConfig({
     "@/assets/css/main.css",
   ],
 
-  build: { transpile: ["@heroicons/vue", "@headlessui/vue"] },
-  // modules: [
-  //   "~/modules/ws"
-  // ],
+  // modules: ["./modules/socket"]
 
-  plugins: ["~/plugins/websocket.client.ts"]
+  // build: { transpile: ["@heroicons/vue", "@headlessui/vue"] },
+
+  plugins: ["~/plugins/websocket.client.ts"],
+
 });
