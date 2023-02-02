@@ -1,0 +1,4 @@
+<template>
+  <NuxtPage />
+  <Footer />
+</template>
