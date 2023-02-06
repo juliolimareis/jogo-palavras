@@ -83,7 +83,6 @@
 </template>
 
 <script setup lang="ts">
-import { v4 as uuid, } from "uuid";
 import { RoomData, } from "~~/types";
 
 const { $idUser } = useNuxtApp();

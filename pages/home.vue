@@ -5,7 +5,7 @@
     </Header>
 
     <div class="grid grid-cols-1 gap-4 mt-16">
-      <Button @click="useRouter().push('/create-game')">
+      <Button @click="useRouter().push('/create-room')">
         Criar Sala
       </Button>
       <Button>Entrar</Button>

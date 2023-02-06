@@ -17,7 +17,7 @@ const props = defineProps({
 
 const classes = () => {
   // const classes = "disabled:opacity-50"
-  const defaultClasses = "max-w-sm font-semibold px-5 py-2 rounded-lg text-white bg-primary text-md";
+  const defaultClasses = "max-w-sm font-semibold px-2 py-2 text-sm md:px-5 md:py-2 md:text-md rounded-lg text-white bg-primary";
 
   if(props.disabled){
     return defaultClasses.concat(" ", "disabled:opacity-50");

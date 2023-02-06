@@ -1,6 +1,5 @@
-import { PlayerData, ServerData } from '~~/types';
+import { PlayerData, Room, ServerData, ServerDataPlayerInGame, ServerDataPlayerInRoom } from '~~/types';
 import { WebSocket } from 'ws';
-import { ServerDataPlayerInRoom } from '~~/types';
 
 export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: WebSocket){
   const room = getRoom(idRoom);
@@ -34,10 +33,11 @@ export function getServerDataPlayerInRoom(idRoom: string): ServerDataPlayerInRoo
 
   if(room){
     return room.players.map(p => ({
-      isReady: p.isReady,
-      image: p.image,
-      name: p.name,
       id: p.id,
+      name: p.name,
+      image: p.image,
+      isReady: p.isReady,
+      isOnline: p.isOnline
     })) ?? [];
   }
 
@@ -45,8 +45,44 @@ export function getServerDataPlayerInRoom(idRoom: string): ServerDataPlayerInRoo
 
 }
 
+export function getServerDataPlayerInGame(idRoom: string, idPlayer: string, ws: WebSocket): ServerDataPlayerInGame | undefined {
+  const room = getRoom(idRoom);
+
+  if(room && room.gameReady){
+    const player = extractPlayerRoom(room, idPlayer);
+    
+    if(player){
+      const handCards = player?.handCards ?? [];
+      const tableCards = room.tableCards;
+      const profilePlayersRoom = getServerDataPlayerInRoom(idRoom);
+
+      player.ws = ws;
+      
+      return {
+        handCards,
+        tableCards,
+        profilePlayersRoom,
+      };
+    }
+  }
+
+  return undefined;
+}
+
+export function isAdmin(idUser: string, idRoom: string): boolean {
+  return getRoom(idRoom)?.idAdmin === idUser;
+}
+
 export function getRoom(idRoom: string){
   return globalThis.rooms.find(r => r.id === idRoom);
+}
+
+export function extractPlayerRoom(room: Room, idPlayer: string){
+  return room.players.find(p => p.id === idPlayer);
+}
+
+export function roomExists(idRoom: string){
+  return !!(getRoom(idRoom));
 }
 
 export function getRoomPlayer(idPlayer: string){
@@ -57,10 +93,26 @@ export function emitAll(idRoom: string, data: ServerData){
   const room = getRoom(idRoom);
 
   if(room){
-    room.players.forEach(player => {
-      player.ws.send(
+    room.players.forEach(p => {
+      p.ws.send(
         JSON.stringify(data)
-      )
+      );
+    });
+  }
+}
+
+export function emit(idRoom: string, idPlayer: string, data: ServerData){
+  const room = getRoom(idRoom);
+
+  if(room){
+    room.players.some(p => {
+      if(p.id === idPlayer){
+        p.ws.send(
+          JSON.stringify(data)
+        );
+
+        return true;
+      }
     });
   }
 }

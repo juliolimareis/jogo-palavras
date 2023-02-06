@@ -6,11 +6,12 @@ interface PlayerData<T = any> {
   idRoom?: string;
   data: T;
   name?: string;
-  channel: "enter-room" | "set-name" | "chat-message" | "set-ready";
+  channel: "round-timeout" | "enter-room" | "set-name" | "chat-message" | "set-ready" | "game-start" | "enter-game";
 }
 
 interface DataChat {
   message: string;
+  
 }
 
 interface ServerDataPlayerInRoom {
@@ -18,7 +19,15 @@ interface ServerDataPlayerInRoom {
   name?: string;
   isReady: boolean;
   image?: string;
+  isOnline?: boolean;
 }
+
+interface ServerDataPlayerInGame {
+  handCards: Card[];
+  tableCards: Card[];
+  profilePlayersRoom: ServerDataPlayerInRoom[]
+}
+
 
 interface ServerDataSerName {
   name: string;
@@ -26,7 +35,7 @@ interface ServerDataSerName {
 
 //dados que o servidor envia
 interface ServerData<T = any> {
-  channel: "players-in-room" | "chat-message" | "game-start" | "remove-player";
+  channel: "round-timeout" | "players-in-room" | "chat-message" | "game-start" | "remove-player" | "game-start" | "player-in-game";
   data: T;
 }
 
@@ -39,12 +48,13 @@ interface RoomData {
   difficulty: "0" | "1" | "2";
 }
 
-interface Room extends RoomData{
+interface Room extends RoomData {
   round: number;
   timeout: number; //tempo atual do contador da rodada
   results: Result[];
   players: PlayerRoom[];
   deck: Card[];
+  tableCards: Card[];
   gameReady?: boolean;
 }
 
@@ -53,9 +63,14 @@ interface PlayerRoom {
   ws: WebSocket,
   image?: string;
   name?: string;
-  specialCards: Card[];
-  cards: Card[];
+  cardsShields: Card[];
+  handCards: Card[];
   isReady: boolean;
+  /*
+   Apenas para saber se o jogador está online na tela do jogo. 
+   Isso não se aplica na tela da sala, pois neste caso o jogador é removido da sala quando fica offline. 
+  */
+  isOnline?: boolean; 
 }
 
 interface Result {
@@ -65,10 +80,21 @@ interface Result {
   points: number; 
 }
 
+/**
+ * @acc: Acentuação
+ */
 interface Card {
   value: string;
   points: number;
   image?: string;
-  addition?: string;
-  isSpecial?: boolean;
+  acc?: string;
+  isShield?: boolean;
+}
+
+interface CheckRoomResponse {
+  message: "room exist." | "room not found.";
+  idRoom?: string;
+  idAdmin?: string;
+  gameReady?: boolean;
+  roomExists: boolean;
 }

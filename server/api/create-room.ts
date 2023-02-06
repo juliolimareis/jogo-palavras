@@ -7,12 +7,12 @@ export default defineEventHandler(async (event) => {
   const roomPlayer = getRoomPlayer(body.idAdmin);
 
   if(roomPlayer){
-    event.node.res.statusCode = 209;
+    event.node.res.statusCode = 409;
 
     return { body: { idRoom: roomPlayer.id, message: "player in room." } };
   }
 
-  if(Object.values(body).filter(v => v).length === 5) {
+  if(Object.values(body).filter(v => v).length === 6) {
     const id = uuid();
 
     globalThis.rooms.push({
@@ -23,7 +23,8 @@ export default defineEventHandler(async (event) => {
       players: [],
       timeout: 1,
       id,
-      idAdmin: body.id
+      tableCards: [],
+      idAdmin: body.idAdmin
     });
 
     event.node.res.statusCode = 201;

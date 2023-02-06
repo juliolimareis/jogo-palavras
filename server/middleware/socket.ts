@@ -1,6 +1,7 @@
-import WebSocket, { WebSocketServer, Server } from "ws"
-import { addPlayerInRoom, emitAll, getServerDataPlayerInRoom, removePlayer, setName, setReady, } from "~~/core/dataUser"
-import { DataChat, PlayerData, Room, ServerData, ServerDataPlayerInRoom } from "~~/types"
+import WebSocket, { WebSocketServer, } from "ws"
+import { addPlayerInRoom, emit, emitAll, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/core/dataUser"
+import { startGame } from "~~/game"
+import { DataChat, PlayerData, Room, ServerData, ServerDataPlayerInGame, ServerDataPlayerInRoom } from "~~/types"
 declare global {
   var wss: WebSocketServer
   var rooms: Room[]
@@ -12,6 +13,7 @@ global.rooms = [
   {
     id: "b675b85c-407e-493f-a8da-9c9c222164d8",
     deck: [],
+    tableCards: [],
     difficulty: "0",
     idAdmin: "17e186c9-a0e4-401f-961f-c54e706dc5c0",
     maxRounds: 3,
@@ -40,19 +42,51 @@ export default defineEventHandler((event) => {
         const playerData: PlayerData = JSON.parse(message.toString());
 
         switch (playerData.channel) {
+          case "game-start":
+            if(isAdmin(idUser, idRoom)){
+              startGame(idRoom);
+            }
+            break;
           case "enter-room":
             idUser = playerData.idUser ?? "";
             idRoom = playerData.idRoom ?? "";
             userName = playerData.name ?? "";
 
-            if(addPlayerInRoom(playerData, socket))
+            if(addPlayerInRoom(playerData, socket)){
               emitAll(
-                idRoom,
-                {
+                idRoom, {
                   channel: "players-in-room",
                   data: getServerDataPlayerInRoom(idRoom)
                 } as ServerData<ServerDataPlayerInRoom[]>
               );
+            }
+            break; 
+          case "enter-game":
+            idUser = playerData.idUser ?? "";
+            idRoom = playerData.idRoom ?? "";
+            userName = playerData.name ?? ""; 
+
+            console.warn("[enter-game] Try enter game.");
+
+            if(getRoomPlayer(idUser)){
+              const data = getServerDataPlayerInGame(idRoom, idUser, socket);
+
+              if(data){
+                emit(
+                  idRoom,
+                  idUser,
+                  {
+                    channel: "player-in-game",
+                    data: data
+                  } as ServerData<ServerDataPlayerInGame>
+                );
+              }else{
+                console.warn("[enter-game] room not found or gameReady failed");
+              }
+            }else{
+              console.warn("[enter-game] Player not found in room");
+            }
+
             break; 
           case "set-name":
             userName = playerData.data.name;
@@ -75,9 +109,10 @@ export default defineEventHandler((event) => {
             );
             break;
           case "chat-message":            
-            if(userName.trim()
-              && typeof playerData.data.message === "string"
-              && playerData.data.message.trim() 
+            if(
+              userName.trim()
+                && typeof playerData.data.message === "string"
+                  && playerData.data.message.trim() 
             ){
               emitAll(
                 idRoom, {
