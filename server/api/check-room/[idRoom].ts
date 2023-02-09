@@ -1,5 +1,4 @@
 import { getRoom, } from "~~/core/dataUser";
-import { CheckRoomResponse, } from "~~/types";
 
 export default defineEventHandler<CheckRoomResponse>(async event => {
   const idRoom = event.context.params.idRoom;

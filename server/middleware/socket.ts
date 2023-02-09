@@ -1,7 +1,6 @@
+import { startGame } from "~~/game"
 import WebSocket, { WebSocketServer, } from "ws"
 import { addPlayerInRoom, emit, emitAll, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/core/dataUser"
-import { startGame } from "~~/game"
-import { DataChat, PlayerData, Room, ServerData, ServerDataPlayerInGame, ServerDataPlayerInRoom } from "~~/types"
 declare global {
   var wss: WebSocketServer
   var rooms: Room[]

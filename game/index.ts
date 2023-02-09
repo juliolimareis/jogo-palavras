@@ -1,4 +1,3 @@
-import { Room } from "~~/types";
 import { emitAll, getRoom } from "~~/core/dataUser";
 import { getDeckProfile, getHand, getTableCards } from "./deck";
 

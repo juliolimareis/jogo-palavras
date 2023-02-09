@@ -1,4 +1,3 @@
-import { RoomData, } from "~~/types";
 import { v4 as uuid, } from "uuid";
 import { getRoomPlayer, } from "~~/core/dataUser";
 

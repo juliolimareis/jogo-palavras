@@ -108,7 +108,6 @@
 </template>
 
 <script lang="ts" setup>
-import { PlayerData, ServerData, ServerDataPlayerInRoom, ServerDataSerName, } from "~~/types";
 
 const router = useRouter();
 const { $socket, $idRoom, $idUser, $userName, } = useNuxtApp();

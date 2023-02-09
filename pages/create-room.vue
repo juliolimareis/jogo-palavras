@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { RoomData, } from "~~/types";
+import { RoomData, } from "~~/types/types/types";
 
 const { $idUser } = useNuxtApp();
 

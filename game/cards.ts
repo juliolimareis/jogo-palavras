@@ -1,8 +1,6 @@
-import { Card } from "~~/types";
+type DeckCard = Record<string, GameCard>;
 
-type DeckCard = Record<string, Card>;
-
-export const Vowels: Card["value"][] = ["A", "E", "I", "O", "U"];
+export const Vowels: GameCard["value"][] = ["A", "E", "I", "O", "U"];
 
 export const Cards: DeckCard = {
   A:{

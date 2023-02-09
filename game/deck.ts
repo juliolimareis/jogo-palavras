@@ -1,7 +1,6 @@
 import { Vowels, Cards } from './cards';
-import { Room, Card } from "~~/types";
 
-export function getTableCards(deck: Card[]){
+export function getTableCards(deck: GameCard[]){
   const table = [];
   
   for(let i in Array.from(Array(4))){
@@ -14,7 +13,7 @@ export function getTableCards(deck: Card[]){
   }
 }
 
-export function getHand(deck: Card[]){
+export function getHand(deck: GameCard[]){
   const hand = [];
   
   for(let i in Array.from(Array(7))){

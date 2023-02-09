@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { DataChat, PlayerData, } from "~~/types";
+import { DataChat, PlayerData, } from "~~/types/types/types";
 
 defineProps({
   chatMessage: {

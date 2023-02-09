@@ -1,4 +1,3 @@
-import { PlayerData, Room, ServerData, ServerDataPlayerInGame, ServerDataPlayerInRoom } from '~~/types';
 import { WebSocket } from 'ws';
 
 export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: WebSocket){
