@@ -1,4 +1,6 @@
+import { specialLatters } from './../game/cards';
 import { WebSocket } from 'ws';
+import { sumWordPoints } from '~~/game';
 
 export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: WebSocket){
   const room = getRoom(idRoom);
@@ -27,6 +29,8 @@ export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: 
   return false;
 }
 
+
+
 export function getServerDataPlayerInRoom(idRoom: string): ServerDataPlayerInRoom[] {
   const room = getRoom(idRoom);
 
@@ -36,15 +40,92 @@ export function getServerDataPlayerInRoom(idRoom: string): ServerDataPlayerInRoo
       name: p.name,
       image: p.image,
       isReady: p.isReady,
-      isOnline: p.isOnline
+      isOnline: p.isOnline,
+      totalScore: p?.totalScore ?? 0,
     })) ?? [];
   }
 
   return [];
-
 }
 
-export function getServerDataPlayerInGame(idRoom: string, idPlayer: string, ws: WebSocket): ServerDataPlayerInGame | undefined {
+export function gerResultsRoom(idRoom: string) {
+  const room = getRoom(idRoom);
+
+  if(room){
+    return room.results;
+  }
+
+  return [];
+}
+
+export function identTotalScore(results: Result[]) {
+  const roundsSet = new Set<number>(results.map(r => r.round));
+  const resultPerRound: Record<string, Result[]> = {};
+
+  roundsSet.forEach((r, i) => {
+    resultPerRound[i] = results.filter(rd => rd.round === r);
+  });
+
+  return resultPerRound;
+}
+
+export function addWordPlayerInResults(idRoom: string, idPlayer: string, cards: GameCard[]) {
+  console.log("[addWordPlayerInResults] init");
+  
+  const room = getRoom(idRoom);
+
+  if(room){
+    const player = extractPlayerRoom(room, idPlayer);
+
+    if(player){
+      if(player.handCards && cards.length){
+        player.handCards = player.handCards.filter(c => !cards.some(cd => c.id === cd.id));
+      }
+    
+      room.results.push({
+        cards,
+        idPlayer,
+        round: room.round,
+        points: sumWordPoints(cards),
+        playerName: player.name ?? "",
+      });
+
+      console.log("[addWordPlayerInResults] ok!");
+    }
+  }
+}
+
+export function sumTotalScorePlayers(idRoom: string){
+  const room = getRoom(idRoom);
+
+  return 0;
+
+  // if(room){
+  //   room.players.forEach(player => {
+  //     let playerResults: Result[] = [];
+      
+  //     room.results.forEach(result => {
+  //       playerResults = [...playerResults, ...result.filter(r => r.idPlayer === player.id)];
+  //     });
+      
+  //     const sumResults = playerResults.reduce((t, pr) => {
+  //       let special = 0;
+
+  //       // verifica se tem caracteres special na palavra, sem sim + 10 pontos
+  //       if(specialLatters.some(sp => pr.cards.some(c => c.value === sp || c.jokerValue === sp))){
+  //         special = 10;
+  //       }
+
+  //       return t + pr.points + special;
+  //     }, 0);
+  //     const sumResultsHand = player.handCards.reduce((t, hc) => t + hc.points, 0);
+
+  //     player.totalScore = sumResults + sumResultsHand;
+  //   });
+  // }
+}
+
+export function getServerDataPlayerInGame(idRoom: string, idPlayer: string, ws?: WebSocket): ServerDataPlayerInGame | undefined {
   const room = getRoom(idRoom);
 
   if(room && room.gameReady){
@@ -55,7 +136,9 @@ export function getServerDataPlayerInGame(idRoom: string, idPlayer: string, ws: 
       const tableCards = room.tableCards;
       const profilePlayersRoom = getServerDataPlayerInRoom(idRoom);
 
-      player.ws = ws;
+      if(ws){
+        player.ws = ws;
+      }
       
       return {
         handCards,
@@ -92,11 +175,17 @@ export function emitAll(idRoom: string, data: ServerData){
   const room = getRoom(idRoom);
 
   if(room){
-    room.players.forEach(p => {
-      p.ws.send(
-        JSON.stringify(data)
-      );
-    });
+    try {
+      room.players.forEach((p) => {
+        p.ws.send(
+          JSON.stringify(data)
+        );
+      });
+    } catch (error) {
+      console.log("[emitAll] Error!");
+      console.log("[emitAll- data]: ", data);
+      console.log(error);
+    }
   }
 }
 
@@ -104,15 +193,13 @@ export function emit(idRoom: string, idPlayer: string, data: ServerData){
   const room = getRoom(idRoom);
 
   if(room){
-    room.players.some(p => {
-      if(p.id === idPlayer){
-        p.ws.send(
-          JSON.stringify(data)
-        );
+    const player = extractPlayerRoom(room, idPlayer);
 
-        return true;
-      }
-    });
+    if(player){
+      player.ws.send(
+        JSON.stringify(data)
+      );
+    }
   }
 }
 

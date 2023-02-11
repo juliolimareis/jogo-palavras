@@ -1,6 +1,6 @@
 import { startGame } from "~~/game"
 import WebSocket, { WebSocketServer, } from "ws"
-import { addPlayerInRoom, emit, emitAll, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/core/dataUser"
+import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, gerResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, sumTotalScorePlayers, } from "~~/core/dataUser"
 declare global {
   var wss: WebSocketServer
   var rooms: Room[]
@@ -15,13 +15,12 @@ global.rooms = [
     tableCards: [],
     difficulty: "0",
     idAdmin: "17e186c9-a0e4-401f-961f-c54e706dc5c0",
-    maxRounds: 3,
+    maxRounds: 2,
     maxPlayers: 10,
     results: [],
     players: [],
     round: 0,
-    roundTimeout: 3,
-    timeout: 0,
+    roundTimeout: 1,
   }
 ];
 
@@ -41,6 +40,35 @@ export default defineEventHandler((event) => {
         const playerData: PlayerData = JSON.parse(message.toString());
 
         switch (playerData.channel) {
+          case "finish-round":
+            console.log("[finished-round]");
+
+            addWordPlayerInResults(idRoom, idUser, playerData.data.cards as GameCard[]);
+
+            if(getRoom(idRoom)?.endGame){
+              console.log("[finished-round] end-game");
+
+
+              sumTotalScorePlayers(idRoom);
+              
+              emitAll( //retorna os dados com os pontos torais de cada jogador
+                idRoom, {
+                  channel: "end-game",
+                  data: getServerDataPlayerInRoom(idRoom)
+                } as ServerData<ServerDataPlayerInRoom[]>
+              );
+            }
+            
+            console.log("result-round");
+
+            emitAll( // retorna results da room, para o front calcular como esta o rank no momento
+              idRoom, {
+                channel: "result-round",
+                data: gerResultsRoom(idRoom)
+              } as ServerData
+            );
+            
+          break;
           case "game-start":
             if(isAdmin(idUser, idRoom)){
               startGame(idRoom);
@@ -61,16 +89,33 @@ export default defineEventHandler((event) => {
             }
             break; 
           case "enter-game":
-            idUser = playerData.idUser ?? "";
-            idRoom = playerData.idRoom ?? "";
-            userName = playerData.name ?? ""; 
+            let isReconnect = false;
+
+            if(!idUser && !idRoom && !userName){
+              console.warn("[enter-game] fist entry");
+
+              idUser = playerData.idUser ?? "";
+              idRoom = playerData.idRoom ?? "";
+              userName = playerData.name ?? ""; 
+            }else{
+              console.warn("[enter-game] game continue");
+              isReconnect = true;
+            }
 
             console.warn("[enter-game] Try enter game.");
 
             if(getRoomPlayer(idUser)){
-              const data = getServerDataPlayerInGame(idRoom, idUser, socket);
+              let ws;
+
+              if(isReconnect){
+                ws = socket;
+              }
+
+              const data = getServerDataPlayerInGame(idRoom, idUser, ws);
 
               if(data){
+                console.warn("[enter-game] emit: player-in-game");
+
                 emit(
                   idRoom,
                   idUser,

@@ -1,7 +1,9 @@
 import { emitAll, getRoom } from "~~/core/dataUser";
-import { getDeckProfile, getHand, getTableCards } from "./deck";
+import { getDeckProfile, getHand, getNextCard, getTableCards } from "./deck";
 
-export function startGame(idRoom: string) {
+const TIMEOUT_TO_NEXT_ROUND = 10; // 5 seconds
+
+export function startGame(idRoom: string){
   const room = getRoom(idRoom);
 
   if(room){
@@ -22,7 +24,9 @@ export function startGame(idRoom: string) {
     room.deck = deck;
     room.tableCards = table;
 
-    emitAll(room.id, {
+    console.log("[startGame][game-start] - Start game")
+
+    emitAll(room.id, { //emite para room que o jogo começou
       channel: "game-start",
       data: {
         path: room.id
@@ -34,7 +38,15 @@ export function startGame(idRoom: string) {
 
 }
 
+export function sumWordPoints(cards: GameCard[]){
+  const bonus = cards.length ? 10 : 0;
+  
+  return cards.reduce((t, c) => c.points + t, 0) + bonus;
+}
+
 function startTimeRound(room: Room){
+  console.log("[startTimeRound] - init")
+
   let timeout = room.roundTimeout * 60;
   
   const interval = setInterval(() => {
@@ -48,6 +60,51 @@ function startTimeRound(room: Room){
 
     if(timeout === 0){
       clearInterval(interval);
+
+      if(room.round < room.maxRounds){
+        console.log("[startTimeRound] - timeNextRound")
+        timeNextRound(room);
+      }else{
+        room.endGame = true;
+        console.log("[startTimeRound]: Game Over.")
+      }
     }
   }, 1000);
+}
+
+function timeNextRound(room: Room){  
+  console.log("[timeNextRound] - Init")
+
+  setTimeout(() => {
+    startNextRound(room);
+  }, TIMEOUT_TO_NEXT_ROUND * 1000);
+}
+
+function startNextRound(room: Room){
+  console.log("[startNextRound] - Init")
+
+  // add uma carta para cada jogador
+  room.players.forEach(p => {
+    const { card, deck } = getNextCard(room.deck);
+
+    room.deck = deck;
+    p.handCards.push(card);
+  });
+
+  // add as catas na mesa
+  const { deck, table } = getTableCards(room.deck);
+
+  room.round++;
+  room.deck = deck;
+  room.tableCards = table;
+
+  console.log("[startNextRound][next-round] - Iniciando novo round");
+  console.log("round: " + room.round)
+
+  emitAll(room.id, {
+    channel: "next-round",
+    data: {}
+  });
+  
+  startTimeRound(room);
 }

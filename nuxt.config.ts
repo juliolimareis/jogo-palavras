@@ -12,4 +12,12 @@ export default defineNuxtConfig({
     { path: "~/components/icons", extensions: ["vue"] }
   ],
 
+  build: {
+    extend(config, ctx) {
+      if (ctx.isDev) {
+        config.devtool = ctx.isClient ? "source-map" : "inline-source-map";
+      }
+    }
+  }
+
 });

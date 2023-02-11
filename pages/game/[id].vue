@@ -57,9 +57,13 @@
       <div class="-border-2 border-green-500">
         <div class="">
           <Button class="float-left" @click="checkWord" :disabled="isLoaderCheckWord || selectedCards.length < 2">{{isLoaderCheckWord ? 'Verificando' : 'Verificar Palavra'}}</Button>
-          <Button @click="resetWork" class="bg-red-400 float-right">Reiniciar</Button>
+          <Button @click="resetWork" class="bg-red-400 float-right">Apagar</Button>
         </div>
       </div>
+    </div>
+
+    <div v-if="status === 'round-score'">
+      <Score :results="results" :isGameOver="isGameOver"/>
     </div>
 
   </div>
@@ -67,11 +71,7 @@
 </template>
 
 <script lang="ts" setup>
-/*
-verifique se :"xafariz" é um nome de pessoa. Responda sim ou não. Em caso de informação insuficiente responda não
-Verifique se :"júlio" existe no dicionário da lingua portuguesa do Brasil. Responda sim ou não. 
-*/
-
+import { identTotalScore } from "~~/core/dataUser";
 import { checkRoom } from "~~/core/repository";
 
 const status = ref<MessageStatus>("loading");
@@ -86,6 +86,9 @@ const selectedJoker = ref<GameCard>();
 
 const isWordValid = ref(false);
 const isLoaderCheckWord = ref(false);
+
+const results = ref<Record<string, Result[]>>({});
+const isGameOver = ref(false);
 
 onMounted(async () => {
   const { $socket, $idRoom, $idUser, $userName } = useNuxtApp();
@@ -128,23 +131,59 @@ onMounted(async () => {
     }));
   };
 
-  $socket.onmessage = ({ data }) => {
+  $socket.onmessage = async ({ data }) => {
     const res = JSON.parse(data) as ServerData;
 
     switch (res.channel) {
       case "round-timeout":
         timeout.value = String(res.data.timeout);
+
+        if(res.data.timeout <= 0){
+          if(!isWordValid.value){
+            await checkWord();
+          }
+
+          let data = { cards: selectedCards.value };
+
+          if(!isWordValid.value){
+            data = { cards: [] };
+          }
+          
+          $socket.send(JSON.stringify({
+            channel: "finish-round",
+            data
+          }));
+        }
+
         break;
       case "player-in-game":
-        status.value = "start";
+        console.log("Game start");
 
         const data = res.data as ServerDataPlayerInGame;
-
+        status.value = "start";
         handCards.value = data.handCards;
         tableCards.value = data.tableCards;
-        
-        // console.log(data);
+        selectedCards.value = [];        
         break;
+        case "result-round":
+          console.log("result-round");
+          console.log(res.data);
+          results.value = identTotalScore(res.data);
+          status.value = "round-score";
+          break;
+        case "next-round":
+          console.log("next-round");
+          $socket.send(JSON.stringify({
+            channel: "enter-game",
+            data: {}
+          }));
+          break;
+        case "end-game":
+          console.log("end-game");
+          console.log(res.data);
+          status.value = "round-score";
+          isGameOver.value = true;
+          break;
       default:
         break;
     }
@@ -155,7 +194,6 @@ onMounted(async () => {
 
 function setJoker(latter : string){
   if(selectedJoker.value){
-    console.log("latter", latter);
     selectedJoker.value.jokerValue = latter;
   }
   closeModalJoker();
@@ -192,7 +230,7 @@ function upsertWork(card: GameCard){
 
 }
 
-function checkWord(){
+async function checkWord(){
   isLoaderCheckWord.value = true;
 
   const word = selectedCards.value.map(c => {
@@ -205,13 +243,14 @@ function checkWord(){
   }).join("").toLocaleLowerCase();
 
   if(word.trim()){
-      fetch(`/api/check-word/${word}`, { method: "GET" })
+      await fetch(`/api/check-word/${word}`, { method: "GET" })
         .then(res => res.json())
         .then(res => {
           isWordValid.value = !!(res?.isValid)
-          console.log(res);
+          // console.log(res);
         }).finally(() => isLoaderCheckWord.value = false);
   }else{
+    isLoaderCheckWord.value = false;
     console.log("word is empty");
   }
 }

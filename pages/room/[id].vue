@@ -4,7 +4,15 @@
       Takopi
     </Header>
 
-    <div class="text-center mt-3">
+    <div v-if="checkRoomStatus === 'room-not-exist'" class="text-center text-red-500">
+      Sala não encontrada.
+    </div>
+
+    <div v-else-if="checkRoomStatus === 'room-full'" class="text-center text-red-500">
+      Sala atingiu o limite máximo de jogadores.
+    </div>
+
+    <div v-else-if="checkRoomStatus === 'room-start'" class="text-center mt-3">
       <span class="font-bold">Link da sala: </span>
       <!-- <span id="linkRoom" class="font-bold text-primary"> {{ url }}</span> -->
       <span class="font-bold text-primary">
@@ -108,7 +116,6 @@
 </template>
 
 <script lang="ts" setup>
-
 const router = useRouter();
 const { $socket, $idRoom, $idUser, $userName, } = useNuxtApp();
 
@@ -121,9 +128,13 @@ const isAdmin = ref(false);
 const isReady = ref(false);
 const players = ref<Array<ServerDataPlayerInRoom>>([]);
 const editName = ref(false);
+const checkRoomStatus = ref<"room-full" | "room-start" | "room-not-exist">();
 const idAdmin = ref("");
 
-const clipboardUrl = () => clipboard(url.value).then(() => isClipboard.value = true);
+const clipboardUrl = () => {
+  clipboard(url.value).then(() => isClipboard.value = true);
+  setTimeout(() => isClipboard.value = false, 10000);
+};
 
 onMounted(async () => {
   await checkRoom();
@@ -195,17 +206,26 @@ async function checkRoom() { //room-test = b675b85c-407e-493f-a8da-9c9c222164d8
   await fetch(`/api/check-room/${$idRoom}`, { method: "GET" })
     .then(res => res.json())
     .then(res => {
-      console.log(res);
+      // console.log(res);
 
-      if(res?.gameReady && res?.idRoom){
-        router.replace(`/game/${res.idRoom}`);
-        return;
-      }
+      if(res?.roomExists){
+        if(res?.gameReady){
+          router.replace(`/game/${res.idRoom}`);
+          return;
+        }else if(res.roomIsFull){
+          checkRoomStatus.value = "room-full";
+          return;
+        }
+        
+        checkRoomStatus.value = "room-start";
 
-      idAdmin.value = res?.idAdmin;
+        idAdmin.value = res?.idAdmin;
 
-      if(res?.idAdmin === $idUser){
-        isAdmin.value = true;
+        if(res?.idAdmin === $idUser){
+          isAdmin.value = true;
+        }
+      }else{
+        checkRoomStatus.value = "room-not-exist";
       }
     })
     .catch(err => console.log(err));

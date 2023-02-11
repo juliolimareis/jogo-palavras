@@ -1,6 +1,7 @@
 type DeckCard = Record<string, GameCard>;
 
 export const Vowels: GameCard["value"][] = ["A", "E", "I", "O", "U"];
+export const specialLatters = ["Á", "Â", "Ã", "Í", "Ú", "Ê", "É", "Ó", "Ô", "Õ"];
 
 export const Cards: DeckCard = {
   A:{

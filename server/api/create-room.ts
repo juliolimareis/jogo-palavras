@@ -18,9 +18,8 @@ export default defineEventHandler(async (event) => {
       ...body,
       deck: [],
       results: [],
-      round: 1,
+      round: 0,
       players: [],
-      timeout: 1,
       id,
       tableCards: [],
       idAdmin: body.idAdmin
