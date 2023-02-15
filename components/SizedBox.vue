@@ -6,11 +6,13 @@
 defineProps({
   w: {
     type: String,
-    default: "0"
+    default: "0",
   },
   h: {
     type: String,
     default: "0"
   },
 });
+
+console.log(w);
 </script>

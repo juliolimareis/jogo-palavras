@@ -11,9 +11,19 @@
     </template>
   </Modal>
 
-  <div class="grid grid-rows-3 h-screen">
+  <div v-if="status === 'round-score'">
+    
+    <div v-if="isAdmin && isGameOver" class="m-3 text-center">
+      <Button @click="sendGameRestart">Reiniciar</Button>
+    </div>
+
+    <Score :results="results" :isGameOver="isGameOver"/>
+  </div>
+
+  <div class="grid grid-rows-3 -h-screen">
 
     <StatusMessage :status="status" />
+    
     
     <div v-if="status === 'start'" class="-border-2 border-gray-500 row-span-1">
       <div class="text-mg font-bold text-center">
@@ -56,14 +66,10 @@
       
       <div class="-border-2 border-green-500">
         <div class="">
-          <Button class="float-left" @click="checkWord" :disabled="isLoaderCheckWord || selectedCards.length < 2">{{isLoaderCheckWord ? 'Verificando' : 'Verificar Palavra'}}</Button>
+          <Button class="float-left" @click="onCheckWord" :disabled="isLoaderCheckWord || selectedCards.length < 2">{{isLoaderCheckWord ? 'Verificando' : 'Verificar Palavra'}}</Button>
           <Button @click="resetWork" class="bg-red-400 float-right">Apagar</Button>
         </div>
       </div>
-    </div>
-
-    <div v-if="status === 'round-score'">
-      <Score :results="results" :isGameOver="isGameOver"/>
     </div>
 
   </div>
@@ -71,8 +77,10 @@
 </template>
 
 <script lang="ts" setup>
-import { identTotalScore } from "~~/core/dataUser";
-import { checkRoom } from "~~/core/repository";
+import { identTotalScore } from "~~/game/player";
+import { checkRoom, checkWord } from "~~/core/repository";
+
+const { $socket, $idRoom, $idUser, $userName } = useNuxtApp();
 
 const status = ref<MessageStatus>("loading");
 const timeout = ref("-");
@@ -85,13 +93,13 @@ const modalJoker = ref(false);
 const selectedJoker = ref<GameCard>();
 
 const isWordValid = ref(false);
+const isAdmin = ref(false);
 const isLoaderCheckWord = ref(false);
 
 const results = ref<Record<string, Result[]>>({});
 const isGameOver = ref(false);
 
 onMounted(async () => {
-  const { $socket, $idRoom, $idUser, $userName } = useNuxtApp();
   const checkRoomResponse = await checkRoom($idRoom);
 
   // console.log("checkRoomResponse:", checkRoomResponse);
@@ -99,6 +107,9 @@ onMounted(async () => {
   if(checkRoomResponse?.roomExists){    
     if(!checkRoomResponse?.gameReady){
       status.value = "not-ready";
+    }
+    if(checkRoomResponse?.idAdmin === $idUser){
+      isAdmin.value = true;
     }
   }else{
     status.value = "not-found";
@@ -112,23 +123,11 @@ onMounted(async () => {
   }, 5000);
 
   if(navigator?.userAgent.includes("Firefox")){
-    $socket.send(JSON.stringify({
-      channel: "enter-game",
-      idUser: $idUser,
-      idRoom: $idRoom,
-      name: $userName,
-      data: {}
-    }));
+    sendEnterGame()
   }
 
   $socket.onopen = () => {
-    $socket.send(JSON.stringify({
-      channel: "enter-game",
-      idUser: $idUser,
-      idRoom: $idRoom,
-      name: $userName,
-      data: {}
-    }));
+    sendEnterGame()
   };
 
   $socket.onmessage = async ({ data }) => {
@@ -139,8 +138,10 @@ onMounted(async () => {
         timeout.value = String(res.data.timeout);
 
         if(res.data.timeout <= 0){
+          status.value = "round-score";
+
           if(!isWordValid.value){
-            await checkWord();
+            await onCheckWord();
           }
 
           let data = { cards: selectedCards.value };
@@ -163,7 +164,8 @@ onMounted(async () => {
         status.value = "start";
         handCards.value = data.handCards;
         tableCards.value = data.tableCards;
-        selectedCards.value = [];        
+        selectedCards.value = [];
+        isGameOver.value = false;      
         break;
         case "result-round":
           console.log("result-round");
@@ -184,6 +186,9 @@ onMounted(async () => {
           status.value = "round-score";
           isGameOver.value = true;
           break;
+        case "game-restart":
+          sendEnterGame()
+          break;
       default:
         break;
     }
@@ -191,6 +196,23 @@ onMounted(async () => {
 
   $socket.onclose = () => status.value = "offline";
 });
+
+function sendEnterGame(){
+  $socket.send(JSON.stringify({
+    channel: "enter-game",
+    idUser: $idUser,
+    idRoom: $idRoom,
+    name: $userName,
+    data: {}
+  }));
+}
+
+function sendGameRestart(){
+  $socket.send(JSON.stringify({
+    channel: "game-restart",
+    data: {}
+  }));
+}
 
 function setJoker(latter : string){
   if(selectedJoker.value){
@@ -227,10 +249,9 @@ function upsertWork(card: GameCard){
     card.isSelected = false;
     selectedCards.value.splice(i, 1);
   }
-
 }
 
-async function checkWord(){
+function onCheckWord(){
   isLoaderCheckWord.value = true;
 
   const word = selectedCards.value.map(c => {
@@ -243,12 +264,10 @@ async function checkWord(){
   }).join("").toLocaleLowerCase();
 
   if(word.trim()){
-      await fetch(`/api/check-word/${word}`, { method: "GET" })
-        .then(res => res.json())
-        .then(res => {
-          isWordValid.value = !!(res?.isValid)
-          // console.log(res);
-        }).finally(() => isLoaderCheckWord.value = false);
+    checkWord(word)
+      .then(res => {
+        isWordValid.value = !!(res?.isValid)
+      }).finally(() => isLoaderCheckWord.value = false);
   }else{
     isLoaderCheckWord.value = false;
     console.log("word is empty");
@@ -256,7 +275,3 @@ async function checkWord(){
 }
 
 </script>
-
-<style scoped>
-
-</style>

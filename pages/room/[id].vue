@@ -14,7 +14,7 @@
 
     <div v-else-if="checkRoomStatus === 'room-start'" class="text-center mt-3">
       <span class="font-bold">Link da sala: </span>
-      <!-- <span id="linkRoom" class="font-bold text-primary"> {{ url }}</span> -->
+      
       <span class="font-bold text-primary">
         <input
           id="linkRoom"
@@ -116,8 +116,11 @@
 </template>
 
 <script lang="ts" setup>
+import { checkRoom } from '~~/core/repository';
+
+const { $socket, $idUser, $userName, } = useNuxtApp();
 const router = useRouter();
-const { $socket, $idRoom, $idUser, $userName, } = useNuxtApp();
+const route = useRoute();
 
 const url = ref("");
 const name = ref("");
@@ -129,7 +132,7 @@ const isReady = ref(false);
 const players = ref<Array<ServerDataPlayerInRoom>>([]);
 const editName = ref(false);
 const checkRoomStatus = ref<"room-full" | "room-start" | "room-not-exist">();
-const idAdmin = ref("");
+const idAdmin = ref();
 
 const clipboardUrl = () => {
   clipboard(url.value).then(() => isClipboard.value = true);
@@ -137,7 +140,34 @@ const clipboardUrl = () => {
 };
 
 onMounted(async () => {
-  await checkRoom();
+  const idRoom = route.params.id as string;
+
+  console.log("idRoom", idRoom);
+  console.log("idUser", $idUser);
+  console.log("userName", $userName);
+
+  const checkRoomResponse = await checkRoom(idRoom);
+
+  if(checkRoomResponse?.roomExists){
+    if(checkRoomResponse?.gameReady){
+      router.replace(`/game/${checkRoomResponse.idRoom}`);
+      return;
+    }else if(checkRoomResponse?.roomIsFull){
+      checkRoomStatus.value = "room-full";
+      return;
+    }
+    
+    checkRoomStatus.value = "room-start";
+
+    idAdmin.value = checkRoomResponse?.idAdmin;
+
+    if(checkRoomResponse?.idAdmin === $idUser){
+      isAdmin.value = true;
+    }
+  }else{
+    checkRoomStatus.value = "room-not-exist";
+    return;
+  }
 
   url.value = document.URL;
   name.value = $userName;
@@ -146,7 +176,7 @@ onMounted(async () => {
     $socket.send(JSON.stringify({
       channel: "enter-room",
       idUser: $idUser,
-      idRoom: $idRoom,
+      idRoom,
       name: $userName,
       data: {}
     }));
@@ -156,7 +186,7 @@ onMounted(async () => {
     $socket.send(JSON.stringify({
       channel: "enter-room",
       idUser: $idUser,
-      idRoom: $idRoom,
+      idRoom,
       name: $userName,
       data: {}
     }));
@@ -164,11 +194,12 @@ onMounted(async () => {
 
   $socket.onmessage = ({ data }) => {
     const res = JSON.parse(data) as ServerData;
-    status.value = true;
 
     switch (res.channel) {
       case "players-in-room":
         if(Array.isArray(res.data)){
+          status.value = true;
+
           const admin = res.data.find(p => p.id === idAdmin.value);
 
           if(admin){
@@ -202,34 +233,34 @@ onMounted(async () => {
   $socket.onerror = (err) => console.log(err);
 });
 
-async function checkRoom() { //room-test = b675b85c-407e-493f-a8da-9c9c222164d8
-  await fetch(`/api/check-room/${$idRoom}`, { method: "GET" })
-    .then(res => res.json())
-    .then(res => {
-      // console.log(res);
+// async function checkRoom() { //room-test = b675b85c-407e-493f-a8da-9c9c222164d8
+//   await fetch(`/api/check-room/${$idRoom}`, { method: "GET" })
+//     .then(res => res.json())
+//     .then(res => {
+//       // console.log(res);
 
-      if(res?.roomExists){
-        if(res?.gameReady){
-          router.replace(`/game/${res.idRoom}`);
-          return;
-        }else if(res.roomIsFull){
-          checkRoomStatus.value = "room-full";
-          return;
-        }
+//       if(res?.roomExists){
+//         if(res?.gameReady){
+//           router.replace(`/game/${res.idRoom}`);
+//           return;
+//         }else if(res.roomIsFull){
+//           checkRoomStatus.value = "room-full";
+//           return;
+//         }
         
-        checkRoomStatus.value = "room-start";
+//         checkRoomStatus.value = "room-start";
 
-        idAdmin.value = res?.idAdmin;
+//         idAdmin.value = res?.idAdmin;
 
-        if(res?.idAdmin === $idUser){
-          isAdmin.value = true;
-        }
-      }else{
-        checkRoomStatus.value = "room-not-exist";
-      }
-    })
-    .catch(err => console.log(err));
-}
+//         if(res?.idAdmin === $idUser){
+//           isAdmin.value = true;
+//         }
+//       }else{
+//         checkRoomStatus.value = "room-not-exist";
+//       }
+//     })
+//     .catch(err => console.log(err));
+// }
 
 function setName(){
   if(name.value.trim()){

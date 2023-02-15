@@ -1,6 +1,6 @@
-import { getRoom, } from "~~/core/dataUser";
+import { getRoom, } from "~~/game/player";
 
-export default defineEventHandler<CheckRoomResponse>(async event => {
+export default defineEventHandler<CheckRoomResponse | { message: "room not found.", roomExists: false }>(async event => {
   const idRoom = event.context.params.idRoom;
 
   if(idRoom){
@@ -12,7 +12,8 @@ export default defineEventHandler<CheckRoomResponse>(async event => {
         roomExists: true,
         message: "room exist.",
         idAdmin: room.idAdmin,
-        gameReady: !!(room.gameReady)
+        gameReady: !!(room.gameReady),
+        roomIsFull: room.players.length >= room.maxPlayers
       };
     }
   }

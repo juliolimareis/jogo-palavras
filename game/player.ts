@@ -1,35 +1,39 @@
-import { specialLatters } from './../game/cards';
 import { WebSocket } from 'ws';
 import { sumWordPoints } from '~~/game';
 
-export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: WebSocket){
+export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: WebSocket): boolean {
   const room = getRoom(idRoom);
 
   if(room){
     const playerInRoom = room.players.find(p => p.id === idUser);
 
-    if(!playerInRoom){
-      room.players.push({
-        id: idUser,
-        cards: [],
-        specialCards: [],
-        ws,
-        isReady: false,
-        name
-      });
-
-      return true
-    }else{
+    if(playerInRoom){
       room.players = room.players.filter(p => p.id !== idUser);
       playerInRoom.ws = ws;
       room.players.push(playerInRoom);
+
+      return true;
+    }else{
+      //quantidade maxima de jogadores
+      if(room.players.length <= room.maxPlayers){
+        room.players.push({
+          ws,
+          name,
+          cards: [],
+          id: idUser,
+          isReady: false,
+          specialCards: [],
+        });
+
+        return true;
+      }
+
+      return false;
     }
   }
 
   return false;
 }
-
-
 
 export function getServerDataPlayerInRoom(idRoom: string): ServerDataPlayerInRoom[] {
   const room = getRoom(idRoom);
@@ -70,7 +74,7 @@ export function identTotalScore(results: Result[]) {
 }
 
 export function addWordPlayerInResults(idRoom: string, idPlayer: string, cards: GameCard[]) {
-  console.log("[addWordPlayerInResults] init");
+  console.log("[addWordPlayerInResults] init player:", idPlayer);
   
   const room = getRoom(idRoom);
 
@@ -78,51 +82,71 @@ export function addWordPlayerInResults(idRoom: string, idPlayer: string, cards: 
     const player = extractPlayerRoom(room, idPlayer);
 
     if(player){
-      if(player.handCards && cards.length){
+      console.log("wordCards: ", cards);
+      console.log("handCards before: ", player.handCards);
+      
+      // remove as cartas usadas da mão
+      if(player.handCards.length && cards.length){
         player.handCards = player.handCards.filter(c => !cards.some(cd => c.id === cd.id));
       }
+
+      console.log("handCards after: ", player.handCards);
     
       room.results.push({
         cards,
         idPlayer,
         round: room.round,
-        points: sumWordPoints(cards),
+        score: sumWordPoints(cards),
         playerName: player.name ?? "",
       });
 
-      console.log("[addWordPlayerInResults] ok!");
+      console.log("[addWordPlayerInResults] finish");
     }
   }
 }
 
-export function sumTotalScorePlayers(idRoom: string){
-  const room = getRoom(idRoom);
+export function getTotalScorePlayers(results: Record<string, Result[]>){
+  const totalScorePlayer = [] as TotalScorePlayer[];
+  const playersData = [] as Result[];
+  let allResults = [] as Result[];
 
-  return 0;
+  Object.values(results)
+    .forEach(r => {
+      allResults = [...allResults, ...r] as Result[];
+    });
 
-  // if(room){
-  //   room.players.forEach(player => {
-  //     let playerResults: Result[] = [];
-      
-  //     room.results.forEach(result => {
-  //       playerResults = [...playerResults, ...result.filter(r => r.idPlayer === player.id)];
-  //     });
-      
-  //     const sumResults = playerResults.reduce((t, pr) => {
-  //       let special = 0;
+  const idPlayersSet = new Set(
+    allResults.map(ar => ar.idPlayer)
+  );
 
-  //       // verifica se tem caracteres special na palavra, sem sim + 10 pontos
-  //       if(specialLatters.some(sp => pr.cards.some(c => c.value === sp || c.jokerValue === sp))){
-  //         special = 10;
-  //       }
+  for (let result of allResults) {
+    idPlayersSet.forEach(idPlayer => {
+      if(result.idPlayer === idPlayer){
+        if(!playersData.some(pd => pd.idPlayer === idPlayer)){
+          playersData.push(result);
+        }
+      }
+    });
+  }
 
-  //       return t + pr.points + special;
-  //     }, 0);
-  //     const sumResultsHand = player.handCards.reduce((t, hc) => t + hc.points, 0);
+  playersData.forEach(player => {
+    const totalScore =
+      allResults.filter(ar => player.idPlayer === ar.idPlayer)
+      .map(ar => ar.score)
+      .reduce((t, ar) => ar + t, 0);
 
-  //     player.totalScore = sumResults + sumResultsHand;
-  //   });
-  // }
+    totalScorePlayer.push({
+      totalScore,
+      idPlayer: player.idPlayer,
+      playerName: player.playerName,
+    });
+  });
+
+  return totalScorePlayer.sort((a, b) => {
+    if(a.totalScore < b.totalScore) return 1;
+    else if(a.totalScore > b.totalScore) return -1;
+    return 0;
+  });
 }
 
 export function getServerDataPlayerInGame(idRoom: string, idPlayer: string, ws?: WebSocket): ServerDataPlayerInGame | undefined {
@@ -147,6 +171,8 @@ export function getServerDataPlayerInGame(idRoom: string, idPlayer: string, ws?:
       };
     }
   }
+
+  console.log("[getServerDataPlayerInGame] - invalid room to player in game", room)
 
   return undefined;
 }
@@ -234,4 +260,14 @@ export function removePlayer(idRoom: string, idPlayer: string){
   if(room && !room.gameReady){
     room.players = room.players.filter(p => p.id !== idPlayer);
   }
+}
+
+export function connectRoom(idRoom: string){
+  return new Promise<Room>((resolve, reject) => {
+    const room = getRoom(idRoom);
+
+    if(room){
+      resolve(room);
+    } reject("room not found");
+  })
 }

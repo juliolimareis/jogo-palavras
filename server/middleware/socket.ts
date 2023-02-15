@@ -1,6 +1,6 @@
-import { startGame } from "~~/game"
+import { restartGame, startGame } from "~~/game"
 import WebSocket, { WebSocketServer, } from "ws"
-import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, gerResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, sumTotalScorePlayers, } from "~~/core/dataUser"
+import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, gerResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/game/player"
 declare global {
   var wss: WebSocketServer
   var rooms: Room[]
@@ -20,7 +20,7 @@ global.rooms = [
     results: [],
     players: [],
     round: 0,
-    roundTimeout: 1,
+    roundTimeout: 2,
   }
 ];
 
@@ -36,6 +36,8 @@ export default defineEventHandler((event) => {
       let idUser = "";
       let userName = "";
 
+      console.log("connected !");
+
       socket.on("message", (message) => {
         const playerData: PlayerData = JSON.parse(message.toString());
 
@@ -47,9 +49,6 @@ export default defineEventHandler((event) => {
 
             if(getRoom(idRoom)?.endGame){
               console.log("[finished-round] end-game");
-
-
-              sumTotalScorePlayers(idRoom);
               
               emitAll( //retorna os dados com os pontos torais de cada jogador
                 idRoom, {
@@ -58,7 +57,7 @@ export default defineEventHandler((event) => {
                 } as ServerData<ServerDataPlayerInRoom[]>
               );
             }
-            
+
             console.log("result-round");
 
             emitAll( // retorna results da room, para o front calcular como esta o rank no momento
@@ -89,6 +88,8 @@ export default defineEventHandler((event) => {
             }
             break; 
           case "enter-game":
+            console.warn("[enter-game] Try enter game.");
+
             let isReconnect = false;
 
             if(!idUser && !idRoom && !userName){
@@ -97,12 +98,11 @@ export default defineEventHandler((event) => {
               idUser = playerData.idUser ?? "";
               idRoom = playerData.idRoom ?? "";
               userName = playerData.name ?? ""; 
+
+              isReconnect = true;
             }else{
               console.warn("[enter-game] game continue");
-              isReconnect = true;
             }
-
-            console.warn("[enter-game] Try enter game.");
 
             if(getRoomPlayer(idUser)){
               let ws;
@@ -152,6 +152,19 @@ export default defineEventHandler((event) => {
               } as ServerData<ServerDataPlayerInRoom[]>
             );
             break;
+          case "game-restart":
+            restartGame(idRoom, idUser);
+            
+            console.warn("[game-restart] emitAll: game-restart");
+
+            emitAll(
+              idRoom,
+              {
+                channel: "game-restart",
+                data: {}
+              } as ServerData
+            );
+            break;
           case "chat-message":            
             if(
               userName.trim()
@@ -174,8 +187,7 @@ export default defineEventHandler((event) => {
       })
 
       socket.on("close", (code, reason) => {
-
-        console.log("reason: %s:", reason);
+        // console.log("reason: %s:", reason);
         console.log("code: %s:", code);
         
         removePlayer(idRoom, idUser);

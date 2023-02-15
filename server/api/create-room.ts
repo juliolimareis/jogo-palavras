@@ -1,26 +1,26 @@
 import { v4 as uuid, } from "uuid";
-import { getRoomPlayer, } from "~~/core/dataUser";
+import { checkBody, } from "../core/validation";
+import { getRoomPlayer, } from "~~/game/player";
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody<RoomData>(event);
-  const roomPlayer = getRoomPlayer(body.idAdmin);
+  return checkBody(await readBody<RoomData>(event)).then(body => {
+    const roomPlayer = getRoomPlayer(body.idAdmin);
 
-  if(roomPlayer){
-    event.node.res.statusCode = 409;
+    if(roomPlayer){
+      event.node.res.statusCode = 409;
 
-    return { body: { idRoom: roomPlayer.id, message: "player in room." } };
-  }
+      return { body: { idRoom: roomPlayer.id, message: "player in room." } };
+    }
 
-  if(Object.values(body).filter(v => v).length === 6) {
     const id = uuid();
 
     globalThis.rooms.push({
       ...body,
+      id,
+      round: 0,
       deck: [],
       results: [],
-      round: 0,
       players: [],
-      id,
       tableCards: [],
       idAdmin: body.idAdmin
     });
@@ -28,10 +28,10 @@ export default defineEventHandler(async (event) => {
     event.node.res.statusCode = 201;
 
     return { body: { idRoom: id, message: "room created." } };
-  }
+  }).catch(errors => {
+    event.node.res.statusCode = 400;
 
-  event.node.res.statusCode = 400;
-
-  return { body: { message: "values in body incomplete." } };
+    return { body: { message: errors } };
+  });
 });
 

@@ -69,27 +69,32 @@ export function getDeckProfile(maxPlayers: number){
 export function createDeck({ vowels, consonants, joker, atk }: DeckConfig){
   const deck: GameCard[] = [];
 
+  const getCardCopy = (value: string) => ({ ...Cards[value] });
+
   for(let i in Array.from(Array(vowels))){
-    Vowels.forEach(v => deck.push(Cards[v]));
+    Vowels.forEach(v => deck.push(getCardCopy(v)));
   }
 
   for(let i in Array.from(Array(consonants))){
     Object.keys(Cards).forEach(k => {
       if(!Vowels.includes(k) && k !== "?" && k !== "ATK"){
-        deck.push(Cards[k])
+        deck.push(getCardCopy(k))
       }
     });
   }
 
   for(let i in Array.from(Array(joker))){
-   deck.push(Cards["?"]);
+   deck.push(getCardCopy("?"));
   }
   
   // for(let i in Array.from(Array(atk))){
-  //   deck.push(Cards["ATK"]);
+  //   deck.push(getCardCopy("ATK"));
   // }
 
-  return shuffle<GameCard>(deck.map((c, i) => { c.id = i; return c }));
+  // add ids
+  deck.forEach((c, i) => { c.id = i });
+
+  return shuffle<GameCard>(deck);
 }
 
 export function shuffle<T = any>(arr: Array<T>){

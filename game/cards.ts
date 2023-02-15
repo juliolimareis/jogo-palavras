@@ -18,7 +18,7 @@ export const Cards: DeckCard = {
   },
   "Ç":{
     value: "Ç",
-    points: 3
+    points: 2
   },
   D:{
     value: "D",
@@ -70,7 +70,7 @@ export const Cards: DeckCard = {
   },
   Q:{
     value: "Q",
-    points: 1
+    points: 5
   },
   R:{
     value: "R",
@@ -98,7 +98,7 @@ export const Cards: DeckCard = {
   },
   Z:{
     value: "Z",
-    points: 8
+    points: 10
   },
   "?":{
     value: "?",
