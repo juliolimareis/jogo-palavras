@@ -3,7 +3,7 @@
     <div
       v-for="latter in options"
       :key="latter"
-      class="relative float-left m-3 dark: text-white border-2 dark:border-white p-2 w-10 text-center rounded-lg cursor-pointer"
+      class="relative float-left m-3 text-primary dark:text-white border-2 dark:border-white p-2 w-10 text-center rounded-lg cursor-pointer"
       @click="handleSelect(latter)"
     >
       {{ latter }}
