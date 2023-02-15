@@ -172,25 +172,25 @@ onMounted(async () => {
   url.value = document.URL;
   name.value = $userName;
 
-  if(navigator?.userAgent.includes("Firefox")){
-    $socket.send(JSON.stringify({
-      channel: "enter-room",
-      idUser: $idUser,
-      idRoom,
-      name: $userName,
-      data: {}
-    }));
-  }
+  // if(navigator?.userAgent.includes("Firefox")){
+  $socket.send(JSON.stringify({
+    channel: "enter-room",
+    idUser: $idUser,
+    idRoom,
+    name: $userName,
+    data: {}
+  }));
+  // }
 
-  $socket.onopen = () => {
-    $socket.send(JSON.stringify({
-      channel: "enter-room",
-      idUser: $idUser,
-      idRoom,
-      name: $userName,
-      data: {}
-    }));
-  }
+  // $socket.onopen = () => {
+  //   $socket.send(JSON.stringify({
+  //     channel: "enter-room",
+  //     idUser: $idUser,
+  //     idRoom,
+  //     name: $userName,
+  //     data: {}
+  //   }));
+  // }
 
   $socket.onmessage = ({ data }) => {
     const res = JSON.parse(data) as ServerData;
@@ -232,35 +232,6 @@ onMounted(async () => {
   
   $socket.onerror = (err) => console.log(err);
 });
-
-// async function checkRoom() { //room-test = b675b85c-407e-493f-a8da-9c9c222164d8
-//   await fetch(`/api/check-room/${$idRoom}`, { method: "GET" })
-//     .then(res => res.json())
-//     .then(res => {
-//       // console.log(res);
-
-//       if(res?.roomExists){
-//         if(res?.gameReady){
-//           router.replace(`/game/${res.idRoom}`);
-//           return;
-//         }else if(res.roomIsFull){
-//           checkRoomStatus.value = "room-full";
-//           return;
-//         }
-        
-//         checkRoomStatus.value = "room-start";
-
-//         idAdmin.value = res?.idAdmin;
-
-//         if(res?.idAdmin === $idUser){
-//           isAdmin.value = true;
-//         }
-//       }else{
-//         checkRoomStatus.value = "room-not-exist";
-//       }
-//     })
-//     .catch(err => console.log(err));
-// }
 
 function setName(){
   if(name.value.trim()){
