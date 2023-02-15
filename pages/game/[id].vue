@@ -20,12 +20,16 @@
     <Score :results="results" :isGameOver="isGameOver"/>
   </div>
 
-  <div class="grid grid-rows-3 -h-screen">
+  <div>
 
     <StatusMessage :status="status" />
     
     
     <div v-if="status === 'start'" class="-border-2 border-gray-500 row-span-1">
+      <div class="text-2xl font-bold text-center text-primary">
+        Takopi - {{ $userName }}
+      </div>
+      
       <div class="text-mg font-bold text-center">
         Cartas da Mesa
       </div>
@@ -45,9 +49,13 @@
       <div class="m-auto text-center mt-4">
         <span>
           <span class="float-left ml-3 text-2xl font-bold">{{ timeout }}</span>
-          <b><span 
-            :class="`${isWordValid ? 'text-green-500' : ''}`"
-            v-for="w in selectedCards" >{{ w.jokerValue ?? w.value }}</span></b>&nbsp;&nbsp;
+          <b>
+            <span 
+              :class="`${wordColor}`"
+              v-for="w in selectedCards" >{{ w.jokerValue ?? w.value }}
+            </span>
+            <span> ({{ isWordValid ? sumSelectCards() + 10 : 0 }})</span>
+          </b>&nbsp;&nbsp;
         </span>
         <hr>
       </div>
@@ -67,7 +75,7 @@
       <div class="-border-2 border-green-500">
         <div class="">
           <Button class="float-left" @click="onCheckWord" :disabled="isLoaderCheckWord || selectedCards.length < 2">{{isLoaderCheckWord ? 'Verificando' : 'Verificar Palavra'}}</Button>
-          <Button @click="resetWork" class="bg-red-400 float-right">Apagar</Button>
+          <Button :disabled="isLoaderCheckWord" @click="resetWord" class="bg-red-400 float-right">Apagar</Button>
         </div>
       </div>
     </div>
@@ -92,6 +100,7 @@ const selectedCards = ref<GameCard[]>([]);
 const modalJoker = ref(false);
 const selectedJoker = ref<GameCard>();
 
+const wordColor = ref("");
 const isWordValid = ref(false);
 const isAdmin = ref(false);
 const isLoaderCheckWord = ref(false);
@@ -122,13 +131,13 @@ onMounted(async () => {
     }
   }, 5000);
 
-  if(navigator?.userAgent.includes("Firefox")){
-    sendEnterGame()
-  }
+  // if(navigator?.userAgent.includes("Firefox")){
+  sendEnterGame()
+  // }
 
-  $socket.onopen = () => {
-    sendEnterGame()
-  };
+  // $socket.onopen = () => {
+  //   sendEnterGame()
+  // };
 
   $socket.onmessage = async ({ data }) => {
     const res = JSON.parse(data) as ServerData;
@@ -165,7 +174,9 @@ onMounted(async () => {
         handCards.value = data.handCards;
         tableCards.value = data.tableCards;
         selectedCards.value = [];
-        isGameOver.value = false;      
+        isGameOver.value = false;
+        results.value = {};
+        wordColor.value = "";
         break;
         case "result-round":
           console.log("result-round");
@@ -197,6 +208,8 @@ onMounted(async () => {
   $socket.onclose = () => status.value = "offline";
 });
 
+const sumSelectCards = () => selectedCards.value.reduce((t, sc) => sc.points + t, 0);
+
 function sendEnterGame(){
   $socket.send(JSON.stringify({
     channel: "enter-game",
@@ -215,6 +228,8 @@ function sendGameRestart(){
 }
 
 function setJoker(latter : string){
+  if(isLoaderCheckWord.value) return;
+
   if(selectedJoker.value){
     selectedJoker.value.jokerValue = latter;
   }
@@ -223,17 +238,19 @@ function setJoker(latter : string){
 
 const closeModalJoker = () => modalJoker.value = false;
 
-function resetWork() {
+function resetWord() {
   selectedCards.value = [];
   handCards.value.forEach(c => c.isSelected = false);
   tableCards.value.forEach(c => c.isSelected = false);
   isWordValid.value = false;
+  wordColor.value = ""
 };
 
 function upsertWork(card: GameCard){
   isWordValid.value = false;
 
-  if(card.value === "ATK") return
+  if(isLoaderCheckWord.value) return;
+  if(card.value === "ATK") return;
 
   const i = selectedCards.value.indexOf(card);
 
@@ -266,8 +283,15 @@ function onCheckWord(){
   if(word.trim()){
     checkWord(word)
       .then(res => {
-        isWordValid.value = !!(res?.isValid)
-      }).finally(() => isLoaderCheckWord.value = false);
+        isWordValid.value = !!(res?.isValid);
+      }).finally(() => {
+        isLoaderCheckWord.value = false
+        if(isWordValid.value){
+          wordColor.value = "text-green-500";
+        }else{
+          wordColor.value = "text-red-500";
+        }
+      });
   }else{
     isLoaderCheckWord.value = false;
     console.log("word is empty");
