@@ -1,4 +1,4 @@
 <template>
   <NuxtPage />
-  <Footer />
+  <!-- <Footer /> -->
 </template>

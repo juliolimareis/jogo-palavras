@@ -1,0 +1,71 @@
+<template>
+  <div v-if="isGameOver" class="ml-[-20px]">
+    <h1 class="text-center text-primary mb-3 mt-3 text-2xl font-bold">Resultados Finais</h1>
+
+    <table class="w-screen text-sm text-left text-gray-500 dark:text-gray-400 m-5">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+          <th scope="col" class="px-6 py-3">Rank</th>
+          <th scope="col" class="px-6 py-3">Jogador</th>
+          <th scope="col" class="px-6 py-3">Pontos Totais</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr 
+          v-for="totalScore, i in getTotalScorePlayers(results)"
+          :key="i"
+          :class="`border-2 ${$idUser === totalScore.idPlayer ? 'border-primary' : ''} bg-white dark:bg-gray-800`"
+        >
+          <td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ i + 1 }}°</td>
+          <td class="px-6 py-4">{{ totalScore.playerName }}</td>
+          <td class="px-6 py-4">{{ totalScore.totalScore }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div 
+    v-for="rounds, i in Object.values(results)"
+    :key="i"
+    class="ml-[-20px]"
+  >
+    <h1 class="text-center text-primary mb-3 mt-3 text-2xl">Resultados da Rodada {{ i + 1 }}</h1>
+    
+    <table class="w-screen text-sm text-left text-gray-500 dark:text-gray-400 m-5">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+          <th scope="col" class="px-6 py-3">Jogador</th>
+          <th scope="col" class="px-6 py-3">Palavra</th>
+          <th scope="col" class="px-6 py-3">Pontos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr 
+          v-for="result, i in rounds.sort((a, b) => { if (a.score > b.score) return -1; else if (a.score < b.score) return 1; return 0; })"
+          :key="i"
+          :class="`border-2 ${$idUser === result.idPlayer ? 'border-primary' : ''} bg-white dark:bg-gray-800`"
+        >
+          <td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ result.playerName }}</td>
+          <td class="px-6 py-4">{{ getWord(result.cards)}}</td>
+          <td class="px-6 py-4">{{ result.score }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { getTotalScorePlayers } from '~~/game/player';
+
+const { $idUser } = useNuxtApp();
+
+const props = defineProps<{ results: Record<string, Result[]>, isGameOver: boolean }>();
+const totalScorePlayers = ref<TotalScorePlayer[]>([]);
+
+function getWord(cards: GameCard[]){
+  return cards.map(card => {
+    if(card.jokerValue) return card.jokerValue;
+    return card.value;
+  }).join("") || "-";
+}
+</script>

@@ -3,15 +3,14 @@ import { v4 as uuid, } from "uuid";
 export default defineNuxtPlugin(() => {
   if (process.server) return;
 
+  console.log("pass here!");
+
   const route = useRoute();
 
   const idRoom = route.params.id as string;
 
   const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  // const socket = new WebSocket(`${wsProtocol}//${window.location.host}`);
-  // const socket = new WebSocket(`${wsProtocol}//localhost:1547`);
-  // const socket = new WebSocket(`${wsProtocol}//192.168.70.230:1547`);
-  const socket = new WebSocket(`${wsProtocol}//localhost:3007`);
+  const socket = new WebSocket(`${wsProtocol}//${window.location.hostname}:3007`);
 
   const getIdUser = () => {
     const idUser = localStorage?.idUser ?? uuid();

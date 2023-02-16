@@ -75,37 +75,47 @@
     </div>
 
     <div class="w-auto text-center mt-10">
-      <Button @click="onCreate">
-        Criar Sala
+      <Button
+        :disabled="isLoading"
+        @click="onCreate"
+      >
+        {{ isLoading ? 'Criando ...' : 'Criar Sala' }}
       </Button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { v4 as uuid, } from "uuid";
-import { RoomData, } from "~~/types";
+import { createRoom, checkPlayerRoom, } from "~~/core/repository";
 
 const { $idUser } = useNuxtApp();
 
+const isLoading = ref(false);
+const linkRoom = ref("");
 const roomData = ref<RoomData>({
-  difficulty: "0",
-  maxPlayers: 2,
-  maxRounds: 3,
   id: "create",
+  maxRounds: 3,
+  maxPlayers: 2,
+  difficulty: "0",
   roundTimeout: 3,
   idAdmin: $idUser
 });
 
-const onCreate = () => {
-  fetch("/api/create-room", {
-    method: "POST",
-    body: JSON.stringify(roomData.value),
-  }).then(res => res.json()).then((res) => {
-    if(res.body.idRoom){
-      useRouter().push(`/room/${res.body.idRoom}`);
+onMounted(() => {
+  checkPlayerRoom($idUser).then(res => {
+    if(res?.isInRoom && res?.idRoom){
+      linkRoom.value = `/room/${res.idRoom}`;
     }
-    console.log(res);
+  });
+});
+
+const onCreate = () => {
+  isLoading.value = true;
+
+  createRoom(roomData.value).then((res) => {
+    if(res.body?.idRoom){
+      window.location.replace(`/room/${res.body.idRoom}`);
+    }
   });
 };
 

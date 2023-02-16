@@ -1,6 +1,6 @@
-import WebSocket, { WebSocketServer, Server } from "ws"
-import { addPlayerInRoom, emitAll, getServerDataPlayerInRoom, removePlayer, setName, setReady, } from "~~/core/dataUser"
-import { DataChat, PlayerData, Room, ServerData, ServerDataPlayerInRoom } from "~~/types"
+import { restartGame, startGame } from "~~/game"
+import WebSocket, { WebSocketServer, } from "ws"
+import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, gerResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/game/player"
 declare global {
   var wss: WebSocketServer
   var rooms: Room[]
@@ -12,15 +12,15 @@ global.rooms = [
   {
     id: "b675b85c-407e-493f-a8da-9c9c222164d8",
     deck: [],
+    tableCards: [],
     difficulty: "0",
     idAdmin: "17e186c9-a0e4-401f-961f-c54e706dc5c0",
-    maxRounds: 3,
+    maxRounds: 2,
     maxPlayers: 10,
     results: [],
     players: [],
     round: 0,
-    roundTimeout: 3,
-    timeout: 0,
+    roundTimeout: 2,
   }
 ];
 
@@ -36,23 +36,101 @@ export default defineEventHandler((event) => {
       let idUser = "";
       let userName = "";
 
+      console.log("connected !");
+
       socket.on("message", (message) => {
         const playerData: PlayerData = JSON.parse(message.toString());
 
         switch (playerData.channel) {
+          case "finish-round":
+            console.log("[finished-round]");
+
+            addWordPlayerInResults(idRoom, idUser, playerData.data.cards as GameCard[]);
+
+            if(getRoom(idRoom)?.endGame){
+              console.log("[finished-round] end-game");
+              
+              emitAll( //retorna os dados com os pontos torais de cada jogador
+                idRoom, {
+                  channel: "end-game",
+                  data: getServerDataPlayerInRoom(idRoom)
+                } as ServerData<ServerDataPlayerInRoom[]>
+              );
+            }
+
+            console.log("result-round");
+
+            emitAll( // retorna results da room, para o front calcular como esta o rank no momento
+              idRoom, {
+                channel: "result-round",
+                data: gerResultsRoom(idRoom)
+              } as ServerData
+            );
+            
+          break;
+          case "game-start":
+            if(isAdmin(idUser, idRoom)){
+              startGame(idRoom);
+            }
+            break;
           case "enter-room":
             idUser = playerData.idUser ?? "";
             idRoom = playerData.idRoom ?? "";
             userName = playerData.name ?? "";
 
-            if(addPlayerInRoom(playerData, socket))
+            if(addPlayerInRoom(playerData, socket)){
               emitAll(
-                idRoom,
-                {
+                idRoom, {
                   channel: "players-in-room",
                   data: getServerDataPlayerInRoom(idRoom)
                 } as ServerData<ServerDataPlayerInRoom[]>
               );
+            }
+            break; 
+          case "enter-game":
+            console.warn("[enter-game] Try enter game.");
+
+            let isReconnect = false;
+
+            if(!idUser && !idRoom && !userName){
+              console.warn("[enter-game] fist entry");
+
+              idUser = playerData.idUser ?? "";
+              idRoom = playerData.idRoom ?? "";
+              userName = playerData.name ?? ""; 
+
+              isReconnect = true;
+            }else{
+              console.warn("[enter-game] game continue");
+            }
+
+            if(getRoomPlayer(idUser)){
+              let ws;
+
+              if(isReconnect){
+                ws = socket;
+              }
+
+              const data = getServerDataPlayerInGame(idRoom, idUser, ws);
+
+              if(data){
+                console.warn("[enter-game] emit: player-in-game");
+
+                emit(
+                  idRoom,
+                  idUser,
+                  {
+                    channel: "player-in-game",
+                    data: data
+                  } as ServerData<ServerDataPlayerInGame>
+                );
+              }else{
+                console.warn("[enter-game] room not found or gameReady failed");
+              }
+            }else{
+              console.warn("[enter-game] Player not found in room");
+            }
+
             break; 
           case "set-name":
             userName = playerData.data.name;
@@ -74,10 +152,24 @@ export default defineEventHandler((event) => {
               } as ServerData<ServerDataPlayerInRoom[]>
             );
             break;
+          case "game-restart":
+            restartGame(idRoom, idUser);
+            
+            console.warn("[game-restart] emitAll: game-restart");
+
+            emitAll(
+              idRoom,
+              {
+                channel: "game-restart",
+                data: {}
+              } as ServerData
+            );
+            break;
           case "chat-message":            
-            if(userName.trim()
-              && typeof playerData.data.message === "string"
-              && playerData.data.message.trim() 
+            if(
+              userName.trim()
+                && typeof playerData.data.message === "string"
+                  && playerData.data.message.trim() 
             ){
               emitAll(
                 idRoom, {
@@ -95,8 +187,7 @@ export default defineEventHandler((event) => {
       })
 
       socket.on("close", (code, reason) => {
-
-        console.log("reason: %s:", reason);
+        // console.log("reason: %s:", reason);
         console.log("code: %s:", code);
         
         removePlayer(idRoom, idUser);

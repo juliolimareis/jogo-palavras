@@ -4,9 +4,17 @@
       Takopi
     </Header>
 
-    <div class="text-center mt-3">
+    <div v-if="checkRoomStatus === 'room-not-exist'" class="text-center text-red-500">
+      Sala não encontrada.
+    </div>
+
+    <div v-else-if="checkRoomStatus === 'room-full'" class="text-center text-red-500">
+      Sala atingiu o limite máximo de jogadores.
+    </div>
+
+    <div v-else-if="checkRoomStatus === 'room-start'" class="text-center mt-3">
       <span class="font-bold">Link da sala: </span>
-      <!-- <span id="linkRoom" class="font-bold text-primary"> {{ url }}</span> -->
+      
       <span class="font-bold text-primary">
         <input
           id="linkRoom"
@@ -48,7 +56,6 @@
       
       <!-- <p v-if="isSalveName" class="text-green-500">Nome salvo com sucesso!</p> -->
      </div> 
-
     </div>
 
     <div class="grid grid-cols-1 gap-4 m-auto mt-4">
@@ -83,6 +90,7 @@
       <template v-if="isAdmin">
         <Button 
           class="bg-green-600"
+          @click="gameStart"
           :disabled="!isReady && players.filter((p) => p.isReady).length < 1"
         >
           Iniciar
@@ -108,9 +116,11 @@
 </template>
 
 <script lang="ts" setup>
-import { PlayerData, ServerData, ServerDataPlayerInRoom, ServerDataSerName, } from "~~/types";
+import { checkRoom } from '~~/core/repository';
 
-const { $socket, $idRoom, $idUser, $userName, } = useNuxtApp();
+const { $socket, $idUser, $userName, } = useNuxtApp();
+const router = useRouter();
+const route = useRoute();
 
 const url = ref("");
 const name = ref("");
@@ -121,43 +131,75 @@ const isAdmin = ref(false);
 const isReady = ref(false);
 const players = ref<Array<ServerDataPlayerInRoom>>([]);
 const editName = ref(false);
-const idAdmin = ref("");
+const checkRoomStatus = ref<"room-full" | "room-start" | "room-not-exist">();
+const idAdmin = ref();
 
-const clipboardUrl = () => clipboard(url.value).then(() => isClipboard.value = true);
+const clipboardUrl = () => {
+  clipboard(url.value).then(() => isClipboard.value = true);
+  setTimeout(() => isClipboard.value = false, 10000);
+};
 
 onMounted(async () => {
-  await checkRoom();
+  const idRoom = route.params.id as string;
+
+  console.log("idRoom", idRoom);
+  console.log("idUser", $idUser);
+  console.log("userName", $userName);
+
+  const checkRoomResponse = await checkRoom(idRoom);
+
+  if(checkRoomResponse?.roomExists){
+    if(checkRoomResponse?.gameReady){
+      router.replace(`/game/${checkRoomResponse.idRoom}`);
+      return;
+    }else if(checkRoomResponse?.roomIsFull){
+      checkRoomStatus.value = "room-full";
+      return;
+    }
+    
+    checkRoomStatus.value = "room-start";
+
+    idAdmin.value = checkRoomResponse?.idAdmin;
+
+    if(checkRoomResponse?.idAdmin === $idUser){
+      isAdmin.value = true;
+    }
+  }else{
+    checkRoomStatus.value = "room-not-exist";
+    return;
+  }
 
   url.value = document.URL;
   name.value = $userName;
 
-  if(navigator?.userAgent.includes("Firefox")){
-    $socket.send(JSON.stringify({
-      channel: "enter-room",
-      idUser: $idUser,
-      idRoom: $idRoom,
-      name: $userName,
-      data: {}
-    }));
-  }
+  // if(navigator?.userAgent.includes("Firefox")){
+  $socket.send(JSON.stringify({
+    channel: "enter-room",
+    idUser: $idUser,
+    idRoom,
+    name: $userName,
+    data: {}
+  }));
+  // }
 
-  $socket.onopen = () => {
-    $socket.send(JSON.stringify({
-      channel: "enter-room",
-      idUser: $idUser,
-      idRoom: $idRoom,
-      name: $userName,
-      data: {}
-    }));
-  }
+  // $socket.onopen = () => {
+  //   $socket.send(JSON.stringify({
+  //     channel: "enter-room",
+  //     idUser: $idUser,
+  //     idRoom,
+  //     name: $userName,
+  //     data: {}
+  //   }));
+  // }
 
   $socket.onmessage = ({ data }) => {
     const res = JSON.parse(data) as ServerData;
-    status.value = true;
 
     switch (res.channel) {
       case "players-in-room":
         if(Array.isArray(res.data)){
+          status.value = true;
+
           const admin = res.data.find(p => p.id === idAdmin.value);
 
           if(admin){
@@ -165,7 +207,6 @@ onMounted(async () => {
           }else{
             players.value = res.data;
           }
-
         }
         break;
       case "chat-message":
@@ -175,7 +216,11 @@ onMounted(async () => {
             chatMessage.value += `\n${res.data.message}`;
           }
         break;
-    
+      case "game-start":
+        if(res.data?.path){
+          router.replace(`/game/${res.data.path}`);
+        }
+        break;
       default:
         break;
     }
@@ -187,19 +232,6 @@ onMounted(async () => {
   
   $socket.onerror = (err) => console.log(err);
 });
-
-async function checkRoom() { //room-test = b675b85c-407e-493f-a8da-9c9c222164d8
-  await fetch(`/api/check-room/${$idRoom}`, { method: "GET" })
-    .then(res => res.json())
-    .then(res => {
-      idAdmin.value = res?.idAdmin;
-
-      if(res?.idAdmin === $idUser){
-        isAdmin.value = true;
-      }
-    })
-    .catch(err => console.log(err));
-}
 
 function setName(){
   if(name.value.trim()){
@@ -229,6 +261,16 @@ function setReady(_isReady: boolean){
             isReady: isReady.value 
           }
         } as PlayerData
+      )
+    );   
+}
+
+function gameStart(){
+    $socket.send(
+        JSON.stringify({
+          channel: "game-start",
+          data: {}
+        }
       )
     );   
 }

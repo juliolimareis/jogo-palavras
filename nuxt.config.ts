@@ -5,10 +5,19 @@ export default defineNuxtConfig({
     "@/assets/css/main.css",
   ],
 
-  // modules: ["./modules/socket"]
-
-  // build: { transpile: ["@heroicons/vue", "@headlessui/vue"] },
-
   plugins: ["~/plugins/websocket.client.ts"],
+
+  components: [
+    { path: "~/components", extensions: ["vue"] },
+    { path: "~/components/icons", extensions: ["vue"] }
+  ],
+
+  build: {
+    extend(config, ctx) {
+      if (ctx.isDev) {
+        config.devtool = ctx.isClient ? "source-map" : "inline-source-map";
+      }
+    }
+  }
 
 });

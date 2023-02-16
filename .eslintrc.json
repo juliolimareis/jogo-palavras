@@ -5,8 +5,14 @@
     "browser": true
   },
   "extends": [
-    "plugin:vue/recommended",
-    "eslint:recommended"
+    "plugin:vue/vue3-recommended",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "plugins": [
+    "vue",
+    "@typescript-eslint"
   ],
   "rules": {
     "vue/multi-word-component-names": "off",
@@ -120,5 +126,9 @@
   "globals": {
     "$nuxt": true
   },  
-  "parserOptions": {}
+  "parser": "vue-eslint-parser",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  }
 }
