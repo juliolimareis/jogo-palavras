@@ -141,11 +141,6 @@ const clipboardUrl = () => {
 
 onMounted(async () => {
   const idRoom = route.params.id as string;
-
-  console.log("idRoom", idRoom);
-  console.log("idUser", $idUser);
-  console.log("userName", $userName);
-
   const checkRoomResponse = await checkRoom(idRoom);
 
   if(checkRoomResponse?.roomExists){

@@ -294,7 +294,6 @@ function onCheckWord(){
       });
   }else{
     isLoaderCheckWord.value = false;
-    console.log("word is empty");
   }
 }
 
