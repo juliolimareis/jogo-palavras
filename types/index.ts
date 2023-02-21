@@ -94,7 +94,6 @@ declare global {
     value: string;
     points: number;
     image?: string;
-    acc?: string;
     isShield?: boolean;
     isSelected?: boolean;
     jokerValue?: string;

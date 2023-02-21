@@ -57,8 +57,7 @@
       <div class="mx-auto -border-2 border-gray-400 w-[350px] h-[130px] mt-1">
         <Card v-for="(c, i) in tableCards" :key="i"
           :class="`relative float-left m-2 ${c.isSelected ? 'shadow-md shadow-gray-500' : ''}`"
-          :value="c.value"
-          :points="c.points"
+          :card="c"
           @click="upsertWork(c)"
         />
       </div>
@@ -87,8 +86,7 @@
       >
         <Card v-for="(c, i) in handCards" :key="i"
           :class="`float-left m-1 mx-4 ${c.isSelected ? 'shadow-md shadow-gray-500' : ''}`"
-          :value="c.value"
-          :points="c.points"
+          :card="c"
           @click="upsertWork(c)"
         />
       </div>
@@ -189,10 +187,11 @@ onMounted(async () => {
 
         break;
       case "player-in-game":
-        console.log("Game start");
+        // console.log("Game start");
         closeModalJoker();
-
+        
         const data = res.data as ServerDataPlayerInGame;
+        console.log("hand", data.handCards);
 
         profilePlayersRoom.value = data.profilePlayersRoom;
         status.value = "start";
@@ -207,8 +206,8 @@ onMounted(async () => {
         break;
         case "result-round":
           closeModalJoker();
-          console.log("result-round");
-          console.log(res.data);
+          // console.log("result-round");
+          // console.log(res.data);
           results.value = identTotalScore(res.data);
           status.value = "round-score"
           break;
@@ -220,8 +219,8 @@ onMounted(async () => {
           }));
           break;
         case "end-game":
-          console.log("end-game");
-          console.log(res.data);
+          // console.log("end-game");
+          // console.log(res.data);
           status.value = "round-score";
           isGameOver.value = true;
           isAttack.value = false;
@@ -234,7 +233,7 @@ onMounted(async () => {
         case "attack":
           results.value = identTotalScore(res.data.results);
 
-          console.log(res.data);
+          // console.log(res.data);
           break;
         case "refresh-hand":
           handCards.value = res.data.handCards;

@@ -1,7 +1,11 @@
 <template>
   <div class="h-[250px] overflow-auto">
+    <div v-if="countShieldsInResult">
+      <span class="text-green-500 mb-3">Esta palavra está protegida por <b>{{ countShieldsInResult }}</b> {{ countShieldsInResult > 1 ? 'escudos' : 'escudo' }}.</span>
+    </div>
+
     <div>
-      <span class="text-primary dark:text-white">Você pode destruir até {{ amountAttacks ?? 0 }} letras.</span>
+      <span class="text-primary dark:text-white">Você pode destruir até <b>{{ amountAttacks ?? 0 }}</b> letras.</span>
     </div>
 
     <div
@@ -14,16 +18,17 @@
     </div>
 
     <div>
-      <Button class="mt-3 bg-green-500" @click="handleOnAttack" :disabled="!amountAttacks || !selectedIds.length || result?.cards.filter(c => c.value === '@').length === result?.cards.length">Atacar!</Button>
+      <Button class="mt-3 bg-green-500" @click="handleOnAttack" :disabled="disabledAttackButton()">Atacar!</Button>
     </div>
 
   </div>
 </template>
 
 <script lang="ts" setup>
-import { specialLatters } from '~~/game/cards';
 
 const selectedIds = ref<number[]>([]);
+const isProtected = ref(false);
+const countShieldsInResult = ref(0);
 
 const props = defineProps<{ 
   onAttack: (selectedIds: number[]) => void,
@@ -31,10 +36,13 @@ const props = defineProps<{
   amountAttacks: number,
 }>();
 
-const options = [
-  "A", "B", "C", "Ç", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Z", "Y", "W",
-  ...specialLatters
-];
+function disabledAttackButton(){
+  return !props.amountAttacks
+    || !selectedIds.value.length
+    || (props.result?.cards.filter(c => c.value === '@').length ?? 0) >= props.amountAttacks
+    || isProtected.value
+    || countShieldsInResult.value >= selectedIds.value.length
+}
 
 function upsetSelectId(card: GameCard){
   if(card.id){
@@ -51,5 +59,13 @@ function handleOnAttack() {
     props.onAttack(selectedIds.value);
   }
 }
+
+onMounted(() => {
+  countShieldsInResult.value = props.result?.cards.filter(c => c.isShield).length ?? 0;
+
+  if(countShieldsInResult?.value > props.amountAttacks){
+    isProtected.value = true;
+  }
+});
 
 </script>

@@ -1,4 +1,4 @@
-import { Vowels, Cards } from './cards';
+import { Vowels, Cards, getCardsLatters } from './cards';
 
 export function getTableCards(deck: GameCard[]){
   const table = [];
@@ -36,6 +36,16 @@ export function getHand(deck: GameCard[]){
   return {
     hand, deck
   }
+}
+
+export function getCardShield(deckSize: number) {
+  const cardsLatters = getCardsLatters();
+  const shieldCard = cardsLatters[Math.floor(Math.random() * cardsLatters.length)];
+
+  shieldCard.isShield = true;
+  shieldCard.id = deckSize * 10;
+
+  return shieldCard;
 }
 
 export function getDeckProfile(maxPlayers: number){

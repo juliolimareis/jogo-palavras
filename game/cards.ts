@@ -2,6 +2,7 @@ type DeckCard = Record<string, GameCard>;
 
 export const Vowels: GameCard["value"][] = ["A", "E", "I", "O", "U"];
 export const specialLatters = ["Á", "Â", "Ã", "Í", "Ú", "Ê", "É", "Ó", "Ô", "Õ"];
+export const specialDic = {"Á": "´", "Â": "^", "Ã": "~", "Í": "´", "Ú": "´", "Ê": "^", "É": "´", "Ó": "´", "Ô": "^", "Õ": "~"};
 
 export const Cards: DeckCard = {
   A:{
@@ -109,3 +110,15 @@ export const Cards: DeckCard = {
     points: 10
   },
 };
+
+export function getCardsLatters() {
+  const cardsLatters = [] as GameCard[];
+  
+  Object.keys(Cards).map(k => {
+    if(Cards[k].value !== "ATK" && Cards[k].value !== "?"){
+      cardsLatters.push({ ...Cards[k]});
+    } 
+  }); 
+
+  return cardsLatters;
+}
