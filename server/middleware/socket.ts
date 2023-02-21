@@ -1,6 +1,6 @@
-import { restartGame, startGame } from "~~/game"
+import { handleAttack, restartGame, startGame } from "~~/game"
 import WebSocket, { WebSocketServer, } from "ws"
-import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, gerResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/game/player"
+import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, getHandCardsPlayer, getResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/game/player"
 declare global {
   var wss: WebSocketServer
   var rooms: Room[]
@@ -15,18 +15,16 @@ global.rooms = [
     tableCards: [],
     difficulty: "0",
     idAdmin: "17e186c9-a0e4-401f-961f-c54e706dc5c0",
-    maxRounds: 2,
+    maxRounds: 3,
     maxPlayers: 10,
     results: [],
     players: [],
     round: 0,
-    roundTimeout: 2,
+    roundTimeout: 1,
   }
 ];
 
-console.log("Init Socket");
-
-export default defineEventHandler((event) => {  
+export default defineEventHandler(() => {  
   if (!global.wss) {
     // wss = new WebSocketServer({ server: event.node.res.socket?.server })
     wss = new WebSocketServer({ port: 3007 });
@@ -38,10 +36,33 @@ export default defineEventHandler((event) => {
 
       console.log("connected !");
 
-      socket.on("message", (message) => {
+      socket.on("message", async (message) => {
         const playerData: PlayerData = JSON.parse(message.toString());
 
         switch (playerData.channel) {
+          case "attack":
+            if(idRoom && idUser && userName && playerData.data?.result && playerData.data?.cardsIds){
+              if(handleAttack(idUser, playerData.data.result, playerData.data.cardsIds)){
+                emitAll(
+                  idRoom, {
+                    channel: "attack",
+                    data: {
+                      results: getResultsRoom(idRoom),
+                    }
+                  }
+                );
+
+                emit(
+                  idRoom, idUser, {
+                    channel: "refresh-hand",
+                    data: {
+                      handCards: await getHandCardsPlayer(idRoom, idUser)
+                    }
+                  }
+                );
+              }
+            }
+            break;
           case "finish-round":
             console.log("[finished-round]");
 
@@ -63,7 +84,7 @@ export default defineEventHandler((event) => {
             emitAll( // retorna results da room, para o front calcular como esta o rank no momento
               idRoom, {
                 channel: "result-round",
-                data: gerResultsRoom(idRoom)
+                data: getResultsRoom(idRoom)
               } as ServerData
             );
             

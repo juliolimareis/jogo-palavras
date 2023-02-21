@@ -37,21 +37,32 @@
           <th scope="col" class="px-6 py-3">Jogador</th>
           <th scope="col" class="px-6 py-3">Palavra</th>
           <th scope="col" class="px-6 py-3">Pontos</th>
+          <th scope="col" class="px-6 py-3">Ação</th>
         </tr>
       </thead>
       <tbody>
         <tr 
           v-for="result, i in rounds.sort((a, b) => { if (a.score > b.score) return -1; else if (a.score < b.score) return 1; return 0; })"
           :key="i"
-          :class="`border-2 ${$idUser === result.idPlayer ? 'border-primary' : ''} bg-white dark:bg-gray-800`"
+          :class="`border-2 ${$idUser === result.idPlayer ? 'border-primary' : ''} bg-white dark:bg-gray-800 `"
         >
           <td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ result.playerName }}</td>
-          <td class="px-6 py-4">{{ getWord(result.cards)}}</td>
+          <td :class="`px-6 py-4 ${result.hasAttacked ? 'text-red-500' : ''}`">{{ getWord(result.cards)}}</td>
           <td class="px-6 py-4">{{ result.score }}</td>
+          <td class="px-6 py-4">
+            <template v-if="isAttack && $idUser !== result.idPlayer">
+              <Button class="bg-red-500" @click="onAttack(result)" :disabled="!result.cards.length">Atacar</Button>
+            </template>
+            <template v-else>
+              -
+            </template>
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
+
+  <h1 v-if="!Object.keys(results).length" class="text-center text-primary mb-3 mt-3 text-2xl">Os resultados serão computados na próxima rodada.</h1>
 </template>
 
 <script lang="ts" setup>
@@ -59,7 +70,12 @@ import { getTotalScorePlayers } from '~~/game/player';
 
 const { $idUser } = useNuxtApp();
 
-const props = defineProps<{ results: Record<string, Result[]>, isGameOver: boolean }>();
+const props = defineProps<{
+  results: Record<string, Result[]>,
+  isGameOver: boolean,
+  onAttack: (result: Result) => void,
+  isAttack: boolean,
+}>();
 const totalScorePlayers = ref<TotalScorePlayer[]>([]);
 
 function getWord(cards: GameCard[]){

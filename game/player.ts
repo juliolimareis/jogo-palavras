@@ -52,10 +52,23 @@ export function getServerDataPlayerInRoom(idRoom: string): ServerDataPlayerInRoo
   return [];
 }
 
-export function gerResultsRoom(idRoom: string) {
+export function getHandCardsPlayer(idRoom: string, idPlayer: string){
+  return connectRoom(idRoom, idPlayer).then(({ player }) => {
+    return player.handCards;    
+  }).catch(err => {
+    console.log(err);
+    return [];
+  }); 
+}
+
+export function getResultsRoom(idRoom: string) {
   const room = getRoom(idRoom);
 
   if(room){
+    room.results.forEach(r => {
+      r.score = sumWordPoints(r.cards);
+    });
+
     return room.results;
   }
 
@@ -63,7 +76,7 @@ export function gerResultsRoom(idRoom: string) {
 }
 
 export function identTotalScore(results: Result[]) {
-  const roundsSet = new Set<number>(results.map(r => r.round));
+  const roundsSet = new Set<number>(results.map(r => r.round).reverse());
   const resultPerRound: Record<string, Result[]> = {};
 
   roundsSet.forEach((r, i) => {
@@ -168,6 +181,7 @@ export function getServerDataPlayerInGame(idRoom: string, idPlayer: string, ws?:
         handCards,
         tableCards,
         profilePlayersRoom,
+        results: room.results
       };
     }
   }
@@ -262,12 +276,22 @@ export function removePlayer(idRoom: string, idPlayer: string){
   }
 }
 
-export function connectRoom(idRoom: string){
-  return new Promise<Room>((resolve, reject) => {
+export function connectRoom(idRoom: string, idPlayer: string){
+  return new Promise<{ room: Room, player: PlayerRoom }>((resolve, reject) => {
     const room = getRoom(idRoom);
-
+    
     if(room){
-      resolve(room);
-    } reject("room not found");
+      if(idPlayer){
+        const player = extractPlayerRoom(room, idPlayer);
+
+        if(player){
+          resolve({ room, player });
+        }
+
+        reject("player not found");
+      }
+    } 
+    
+    reject("room not found");
   })
 }

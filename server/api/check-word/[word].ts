@@ -7,6 +7,7 @@ export default defineEventHandler(async event => {
       .then(res => resolve(res.json()));
 
     setTimeout(() => {
+      event.node.req.statusCode = 408;
       reject(`[check-word]: https://api.dicionario-aberto.net/near/${word}: timeout`);
     }, 10000);
   }).then(res => {

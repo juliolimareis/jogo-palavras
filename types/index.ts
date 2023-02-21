@@ -7,7 +7,7 @@ declare global {
     idRoom?: string;
     data: T;
     name?: string;
-    channel: "game-restart" | "finish-round" | "round-timeout" | "enter-room" | "set-name" | "chat-message" | "set-ready" | "game-start" | "enter-game";
+    channel: "attack" | "game-restart" | "finish-round" | "round-timeout" | "enter-room" | "set-name" | "chat-message" | "set-ready" | "game-start" | "enter-game";
   }
 
   interface DataChat {
@@ -27,6 +27,7 @@ declare global {
   interface ServerDataPlayerInGame {
     handCards: GameCard[];
     tableCards: GameCard[];
+    results: Result[];
     profilePlayersRoom: ServerDataPlayerInRoom[]
   }
 
@@ -37,7 +38,7 @@ declare global {
 
   //dados que o servidor envia
   interface ServerData<T = any> {
-    channel: "game-restart" | "result-round" | "next-round" | "end-game" | "round-timeout" | "players-in-room" | "chat-message" | "game-start" | "remove-player" | "game-start" | "player-in-game";
+    channel: "refresh-hand" | "attack" | "game-restart" | "result-round" | "next-round" | "end-game" | "round-timeout" | "players-in-room" | "chat-message" | "game-start" | "remove-player" | "game-start" | "player-in-game";
     data: T;
   }
 
@@ -82,6 +83,7 @@ declare global {
     cards: GameCard[];
     score: number;
     playerName: string;
+    hasAttacked?: boolean;
   }
 
   /**

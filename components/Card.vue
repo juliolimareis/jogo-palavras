@@ -17,6 +17,13 @@
     </div>
 
     <div
+      v-if="value === 'ATK'"
+      class="ml-[5px] mt-[-12px]"
+    >
+      <BobIcon :size="55" />
+    </div>
+
+    <div
       v-if="value === 'J'"
       class="ml-[-10px] mt-[-22px]"
     >
@@ -29,10 +36,10 @@
 
     <div
       v-else-if="value === '?'"
-      class="ml-[18px] mt-[-5px]"
+      class="ml-[11px] mt-[-1px]"
     >
       <Latter
-        :size="'230'"
+        :size="'46'"
         :color="color"
         :render="'?'"
       />
@@ -166,8 +173,11 @@ onMounted(() => {
     background: radial-gradient(#eafe76, #e2af22);
   }
 
-  .bg-atk {
+  /* .bg-atk {
     background: radial-gradient(#fbc1cc, #fa99b2);
+  } */
+  .bg-atk {
+    background: radial-gradient(#ddb6b6, #e71212);
   }
 
   .bg-shd {

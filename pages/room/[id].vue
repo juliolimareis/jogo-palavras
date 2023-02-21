@@ -108,7 +108,7 @@
 
       <div class="mt-4">
         <Button @click="useRouter().replace('/')" class="bg-orange-500">
-          Sair
+          Abandonar
         </Button>
       </div>
     </div>

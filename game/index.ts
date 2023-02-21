@@ -1,10 +1,55 @@
-import { connectRoom, emitAll, getRoom } from "~~/game/player";
+import { connectRoom, emitAll, extractPlayerRoom, getRoom, getRoomPlayer } from "~~/game/player";
 import { getDeckProfile, getHand, getNextCard, getTableCards } from "./deck";
 
-const TIMEOUT_TO_NEXT_ROUND = 10; // 5 seconds
+const TIMEOUT_TO_NEXT_ROUND = 12; // seconds to next round
+
+export function handleAttack(idPlayer: string, result: Result, cardsIds: number[]){
+  const room = getRoomPlayer(idPlayer);
+
+  if(room){
+    const resultIndex = room.results.findIndex(
+      r => r.round === result.round && r.idPlayer === result.idPlayer
+    );
+
+    if(resultIndex !== -1){
+      result.hasAttacked = true;
+
+      result.cards.forEach(c => {
+        if(cardsIds.includes(Number(c.id))){
+          c.value = "@";
+          c.points = 0;
+        }
+      });
+
+      room.results[resultIndex] = result;
+
+      const player = extractPlayerRoom(room, idPlayer);
+
+      if(player){
+        let countCards = cardsIds.length;
+
+        player.handCards = player.handCards.filter(c => {
+          if(countCards > 0 && c.value === "ATK"){
+            countCards--;
+
+            return false;
+          }
+
+          return true;
+        });
+      }
+
+      console.log("handCardsPlayer: ", player?.handCards);
+
+      return true;
+    }
+  }
+
+  return false;
+}
 
 export function restartGame(idRoom: string, idPlayer: string){
-  connectRoom(idRoom).then(room => {
+  connectRoom(idRoom, idPlayer).then(({ room }) => {
     if(!room.gameReady && room.idAdmin === idPlayer){
       room.deck = [],
       room.results = [],
@@ -75,7 +120,7 @@ function startTimeRound(room: Room){
     if(timeout === 0){
       clearInterval(interval);
 
-      if(room.round < room.maxRounds){
+      if((room.round + 1) < room.maxRounds){
         console.log("[startTimeRound] - timeNextRound");
         timeNextRound(room);
       }else{

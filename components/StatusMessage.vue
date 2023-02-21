@@ -25,6 +25,11 @@
     class="mt-20 text-primary text-center font-bold text-lg"
   >
     Jogo ainda não começou.
+
+    <div>
+      <Button class="mt-5" @click="router.push(`/room/${$idRoom}`)">Entrar na sala.</Button>
+    </div>
+    
   </div>
 
   <div v-else-if="status === 'loading'" class="mt-20 text-primary text-center font-bold text-lg">
@@ -35,5 +40,8 @@
 </template>
 
 <script lang="ts" setup>
+const router = useRouter();
+const { $idRoom } = useNuxtApp();
+
 defineProps<{ status: MessageStatus }>();
 </script>
