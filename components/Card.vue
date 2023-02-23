@@ -5,12 +5,12 @@
     </span>
 
     <!-- Check if render special character -->
-    <div v-if="Object.keys(specialDic).includes(card.value)" class="absolute z-10 ml-5 mt-[-20px]">
+    <div v-if="card?.acc && Vowels.includes(card.value)" class="relative z-10 ml-5 mt-[-20px]">
       <Latter
         :class="accClass"
         :size="accSize"
         :color="color"
-        :render="specialDic[card.value]"
+        :render="card.acc"
       />
     </div>
 
@@ -44,7 +44,7 @@
         />
       </div>
 
-      <div class="absolute z-9 left-[20px] top-[42px]">
+      <div class="relative z-9 left-[20px] top-[-22px]">
         <Latter
         :size="'30'"
         :color="color"
@@ -84,11 +84,10 @@
 </template>
 
 <script lang="ts" setup>
-import { specialDic, } from "../game/cards";
+import { specialDic, Vowels } from "../game/cards";
 
 const props = defineProps<{
   card: GameCard,
-  acc?: string,
   isSelected?: boolean,
   color?: string,
 }>();

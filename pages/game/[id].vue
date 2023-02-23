@@ -1,13 +1,13 @@
 <template> 
   <Modal
     class="m-auto"
-    :isOpen="modalJoker"
-    :onClose="closeModalJoker"
+    :isOpen="modalOptionCard"
+    :onClose="closeModalOptionCard"
   >
     <template v-slot:title>Valor do Curinga</template>
     
     <template v-slot:body>
-      <LatterOptions :onSelect="setJoker"/>
+      <LatterOptions :onSelect="setOptionLatter" :card="selectedCard"/>
     </template>
   </Modal>
 
@@ -22,8 +22,11 @@
       <AttackOptions :result="selectedResultAttack" :on-attack="onAttack" :amount-attacks="countAttacks()"/>
     </template>
   </Modal>
-
+  
   <div v-if="status === 'round-score'">
+    <div>
+      <Button class="m-3 float-right bg-orange-600" @click="giveUp">Desistir</Button>
+    </div>
     
     <div v-if="isAdmin && isGameOver" class="m-3 text-center">
       <Button @click="sendGameRestart">Reiniciar</Button>
@@ -47,7 +50,7 @@
     
     <div v-if="status === 'start'" class="-border-2 border-gray-500 row-span-1">
       <div class="text-2xl font-bold text-center text-primary">
-        Takopi - {{ $userName }}
+        Takopi - {{ $userName }} {{ `(${Object.keys(results ?? {}).length + 1}° rodada de ${maxRounds})`}}
       </div>
       
       <div class="text-mg font-bold text-center">
@@ -59,11 +62,16 @@
           :class="`relative float-left m-2 ${c.isSelected ? 'shadow-md shadow-gray-500' : ''}`"
           :card="c"
           @click="upsertWork(c)"
+          @dblclick="handleCardOption(c)"
         />
+        <!-- <Card 
+          :class="`relative float-left m-2`"
+          :card="cardTest"
+        /> -->
       </div>
     </div>
 
-    <div v-if="status === 'start'" class="-border-2 border-red-500">
+    <div v-if="status === 'start'" class="">
 
       <div class="m-auto text-center mt-4">
         <span>
@@ -71,7 +79,7 @@
           <b>
             <span 
               :class="`${wordColor}`"
-              v-for="w in selectedCards" >{{ w.jokerValue ?? w.value }}
+              v-for="w in selectedCards" >{{ w?.acc ? vowelsSpecialDic[w.value][w.acc] ?? "" : w.jokerValue ?? w.value }}
             </span>
             <span> {{ sumSelectCards() }}</span>
           </b>&nbsp;&nbsp;
@@ -88,26 +96,27 @@
           :class="`float-left m-1 mx-4 ${c.isSelected ? 'shadow-md shadow-gray-500' : ''}`"
           :card="c"
           @click="upsertWork(c)"
+          @dblclick="handleCardOption(c)"
         />
       </div>
     
-      
-      <div class="-border-2 border-green-500">
-        <div class="">
-          <Button class="float-left" @click="onCheckWord" :disabled="isLoaderCheckWord || selectedCards.length < 2">{{isLoaderCheckWord ? 'Verificando' : 'Verificar Palavra'}}</Button>
-          <Button class="tex-center" @click="status = 'round-score'">Rank</Button>
-          <Button :disabled="isLoaderCheckWord" @click="resetWord" class="bg-red-400 float-right">Apagar</Button>
-        </div>
+      <div class="flex justify-between p-3">
+        <Button class="" @click="onCheckWord" :disabled="confirmRound || isLoaderCheckWord || selectedCards.length < 2">{{isLoaderCheckWord ? 'Verificando' : 'Verificar Palavra'}}</Button>
+        <Button class="" @click="status = 'round-score'">Rank</Button>
+        <Button class="bg-green-400" @click="onConfirmRound" :disabled="!isWordValid || confirmRound">Finalizar</Button>
+        <Button class="bg-red-400 float-right" :disabled="isLoaderCheckWord || confirmRound" @click="resetWord" >Apagar</Button>
       </div>
     </div>
 
   </div>
-
 </template>
 
 <script lang="ts" setup>
 import { identTotalScore } from "~~/game/player";
 import { checkRoom, checkWord } from "~~/core/repository";
+import { special, Vowels, vowelsSpecialDic } from "~~/game/cards";
+
+// const cardTest = ref<GameCard>({value: "Ç", points: 0});
 
 const router = useRouter();
 const { $socket, $idRoom, $idUser, $userName } = useNuxtApp();
@@ -120,8 +129,8 @@ const tableCards = ref<GameCard[]>([]);
 const selectedCards = ref<GameCard[]>([]);
 const profilePlayersRoom = ref<ServerDataPlayerInRoom[]>([]);
 
-const modalJoker = ref(false);
-const selectedJoker = ref<GameCard>();
+const modalOptionCard = ref(false);
+const selectedCard = ref<GameCard>();
 
 const wordColor = ref("");
 const isWordValid = ref(false);
@@ -135,11 +144,15 @@ const isGameOver = ref(false);
 const modalAttack = ref(false);
 const isAttack = ref(true);
 const selectedResultAttack = ref<Result>();
+const confirmRound = ref(false);
+const maxRounds = ref(0);
 
 onMounted(async () => {
   const checkRoomResponse = await checkRoom($idRoom);
 
   if(checkRoomResponse?.roomExists){    
+    maxRounds.value = checkRoomResponse.maxRounds ?? 0;
+
     if(!checkRoomResponse?.gameReady){
       status.value = "not-ready";
     }
@@ -159,7 +172,7 @@ onMounted(async () => {
 
   sendEnterGame()
 
-  $socket.onmessage = async ({ data }) => {
+  $socket.onmessage = ({ data }) => {
     const res = JSON.parse(data) as ServerData;
 
     switch (res.channel) {
@@ -167,32 +180,37 @@ onMounted(async () => {
         timeout.value = String(res.data.timeout);
 
         if(res.data.timeout <= 0){
+          let data = { cards: selectedCards.value };
+          
           status.value = "round-score"
 
-          if(selectedCards.value.length > 1 && !isWordValid.value){
-            await onCheckWord();
-          }
+          if(isWordValid.value){
+            sendWord(data);
+          }else{
+            if(selectedCards.value.length > 1){
+              // console.log("not valid. Check word.");
+              
+              onCheckWord()
+                .then(() => {
+                  if(!isWordValid.value){
+                    data = { cards: [] };
+                  }
 
-          let data = { cards: selectedCards.value };
-
-          if(!isWordValid.value){
-            data = { cards: [] };
+                  sendWord(data);
+                });
+              }else{
+                sendWord({ cards: []});
+              }
           }
-          
-          $socket.send(JSON.stringify({
-            channel: "finish-round",
-            data
-          }));
         }
-
         break;
       case "player-in-game":
         // console.log("Game start");
-        closeModalJoker();
+        closeModalOptionCard();
         
         const data = res.data as ServerDataPlayerInGame;
-        console.log("hand", data.handCards);
-
+        // console.log("hand", data.handCards);
+        confirmRound.value = false;
         profilePlayersRoom.value = data.profilePlayersRoom;
         status.value = "start";
         handCards.value = data.handCards;
@@ -205,14 +223,14 @@ onMounted(async () => {
         isWordValid.value = false;
         break;
         case "result-round":
-          closeModalJoker();
+          closeModalOptionCard();
           // console.log("result-round");
           // console.log(res.data);
           results.value = identTotalScore(res.data);
           status.value = "round-score"
           break;
         case "next-round":
-          console.log("next-round");
+          // console.log("next-round");
           $socket.send(JSON.stringify({
             channel: "enter-game",
             data: {}
@@ -225,15 +243,13 @@ onMounted(async () => {
           isGameOver.value = true;
           isAttack.value = false;
           closeModalAttack();
-          closeModalJoker();
+          closeModalOptionCard();
           break;
         case "game-restart":
           sendEnterGame()
           break;
         case "attack":
           results.value = identTotalScore(res.data.results);
-
-          // console.log(res.data);
           break;
         case "refresh-hand":
           handCards.value = res.data.handCards;
@@ -243,18 +259,46 @@ onMounted(async () => {
     }
   };
 
-  $socket.onclose = () => status.value = "offline";
+  $socket.onclose = () => status.value = "disconnected";
 });
 
+function sendWord(data: { cards: GameCard[] }){
+  $socket.send(JSON.stringify({
+    channel: "finish-round",
+    data
+  }));
+}
+
+function onConfirmRound() {
+  confirmRound.value = true;
+
+  $socket.send(JSON.stringify({
+    channel: "confirm-round",
+    data: {}
+  }));
+}
+// TODO handleCardOption
+function handleCardOption(card: GameCard) {
+  if(confirmRound.value) return;
+  
+  if(Vowels.includes(card.value)) {
+    wordColor.value = "";
+    selectedCard.value = card;
+    modalOptionCard.value = true;
+    selectedCard.value.isSelected = true;
+
+    if(!selectedCards.value.some(c => c.id === card.id)){
+      selectedCards.value.push(card);
+    }
+  }
+}
+
 function onRequestAttack(result: Result) {
-  console.log("onAttack", result);
   selectedResultAttack.value = result;
   modalAttack.value = true;
 }
 
 function onAttack(selectedIds: number[]) {
-  console.log("onAttack", selectedIds);
-
   $socket.send(JSON.stringify({
     channel: "attack",
     data: {
@@ -292,20 +336,26 @@ function sendGameRestart(){
     data: {}
   }));
 }
-
-function setJoker(latter : string){
+// TODO: setOptionLatter
+function setOptionLatter(latter : string){
   if(isLoaderCheckWord.value) return;
 
-  console.log(latter);
+  console.log(selectedCard.value);
 
-  if(selectedJoker.value){
-    selectedJoker.value.jokerValue = latter;
+  if(selectedCard.value){
+    if(selectedCard.value?.isJoker){
+      selectedCard.value.jokerValue = latter;
+    }else if(special.includes(latter)){
+      selectedCard.value.acc = latter as GameCard['acc'];
+    }else{
+      (selectedCard.value as GameCard).acc = undefined;
+    }
   }
 
-  closeModalJoker();
+  closeModalOptionCard();
 }
 
-const closeModalJoker = () => modalJoker.value = false;
+const closeModalOptionCard = () => modalOptionCard.value = false;
 const closeModalAttack = () => {
   selectedResultAttack.value = undefined;
   modalAttack.value = false;
@@ -318,37 +368,37 @@ function resetWord() {
   isWordValid.value = false;
   wordColor.value = ""
 };
-
+// TODO: upsertWork
 function upsertWork(card: GameCard){
+  if(isLoaderCheckWord.value || confirmRound.value) return;
+  
   isWordValid.value = false;
-
-  console.log(card)
-
-  if(isLoaderCheckWord.value) return;
+  wordColor.value = "";
   
   if(card.value === "ATK") {
-    console.log("Atk")
     status.value = "round-score"
     return;
   };
 
-  const i = selectedCards.value.indexOf(card);
+  const i = selectedCards.value.findIndex(c => c.id === card.id);
 
   if(i === -1){
     if(card.value === "?"){
-      modalJoker.value = true;
-      selectedJoker.value = card;
+      selectedCard.value = card;
+      modalOptionCard.value = true;
     }
 
     card.isSelected = true;
+    
     selectedCards.value.push(card);
   }else {
     card.isSelected = false;
+    card.acc = undefined;
     selectedCards.value.splice(i, 1);
   }
 }
 
-function onCheckWord(){
+async function onCheckWord(){
   isLoaderCheckWord.value = true;
   isWordValid.value = false;
   errorMessageCheckWord.value = "";
@@ -363,13 +413,13 @@ function onCheckWord(){
   }).join("").toLocaleLowerCase();
 
   if(word.trim()){
-    checkWord(word)
+    await checkWord(word)
       .then(res => {
         isWordValid.value = !!(res?.isValid);
       })
-      .catch(err => {
+      .catch(() => {
         errorMessageCheckWord.value = "Erro na verificação da palavra. Você pode tentar novamente."
-      }) 
+      })
       .finally(() => {
         isLoaderCheckWord.value = false
         if(isWordValid.value){
@@ -381,6 +431,17 @@ function onCheckWord(){
   }else{
     isLoaderCheckWord.value = false;
   }
+}
+
+function giveUp() {
+  $socket.send(
+    JSON.stringify({
+      channel: "give-up",
+      data: {}   
+    })
+  );
+
+  router.replace("/");
 }
 
 </script>

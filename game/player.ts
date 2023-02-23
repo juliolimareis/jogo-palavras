@@ -6,15 +6,14 @@ export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: 
 
   if(room){
     const playerInRoom = room.players.find(p => p.id === idUser);
-
+    // player reconnect in room
     if(playerInRoom){
-      room.players = room.players.filter(p => p.id !== idUser);
+      playerInRoom.ws.close();
       playerInRoom.ws = ws;
-      room.players.push(playerInRoom);
 
       return true;
     }else{
-      //quantidade maxima de jogadores
+      // quantidade maxima de jogadores
       if(room.players.length <= room.maxPlayers){
         room.players.push({
           ws,
@@ -174,6 +173,10 @@ export function getServerDataPlayerInGame(idRoom: string, idPlayer: string, ws?:
       const profilePlayersRoom = getServerDataPlayerInRoom(idRoom);
 
       if(ws){
+        if(player.ws){
+          player.ws.close();
+        }
+
         player.ws = ws;
       }
       
@@ -269,11 +272,16 @@ export function setReady(idRoom: string, idPlayer: string, isReady: boolean){
 
 export function removePlayer(idRoom: string, idPlayer: string){
   const room = getRoom(idRoom);
-
-  //só remove o usuário caso o jogo não tenha começado
+  
   if(room && !room.gameReady){
-    room.players = room.players.filter(p => p.id !== idPlayer);
-  }
+    const indexPlayer = room?.players.findIndex(p => p.id === idPlayer)
+    
+    if(indexPlayer !== -1){
+      // só remove o jogador caso o jogo não tenha começado
+      room.players.splice(indexPlayer, 1);
+      console.log("player removed from room");
+    }
+ }
 }
 
 export function connectRoom(idRoom: string, idPlayer: string){

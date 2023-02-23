@@ -3,6 +3,37 @@ import { getCardShield, getDeckProfile, getHand, getNextCard, getTableCards } fr
 
 const TIMEOUT_TO_NEXT_ROUND = 12; // seconds to next round
 
+export async function giveUpPlayer(idRoom: string, idPlayer: string){
+  connectRoom(idRoom, idPlayer)
+    .then(({ room, player, }) => {
+      player.ws.close();
+
+      const indexPlayer = room.players.indexOf(player);
+
+      if(indexPlayer !== -1){
+        room.players.splice(indexPlayer, 1);
+      }
+
+    });
+}
+
+export async function handleConfirmRound(idRoom: string, idPlayer: string){
+  return connectRoom(idRoom, idPlayer)
+    .then(({ room, player }) => {
+      player.confirmRound = true;
+
+      if(!room.players.some(p => !p.confirmRound)){
+        room.jumpRound = true;
+        return true;
+      }
+
+      return false;
+    }).catch(err => { 
+      console.log(err);
+      return false;
+    });
+}
+
 export function handleAttack(idPlayer: string, result: Result, cardsIds: number[]){
   const room = getRoomPlayer(idPlayer);
   
@@ -89,6 +120,7 @@ export function startGame(idRoom: string){
   if(room){
     room.gameReady = true;
     room.endGame = false;
+    room.jumpRound = false;
     room.deck = getDeckProfile(room.maxPlayers);
 
     // distribui as cartas dos jogadores
@@ -134,7 +166,11 @@ function startTimeRound(room: Room){
   
   const interval = setInterval(() => {
 
-    timeout--;
+    if(room.jumpRound){
+      timeout = 0; 
+    }else{
+      timeout--;
+    }
 
     emitAll(room.id, {
       channel: "round-timeout",
@@ -166,6 +202,8 @@ function timeNextRound(room: Room){
 
 function startNextRound(room: Room){
   console.log("[startNextRound] - Init");
+
+  room.jumpRound = false;
 
   // add uma carta para cada jogador
   room.players.forEach(p => {

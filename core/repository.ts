@@ -17,6 +17,6 @@ export const createRoom = (roomData: RoomData) => (
 );
 
 export const checkWord = (word: string) => (
-  fetch(`/api/check-word/${word}`, { method: "GET", timeout: 5000 })
+  fetch(`/api/check-word/${word}`, { method: "GET" })
     .then(res => res.json())
 );

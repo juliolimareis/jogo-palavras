@@ -66,6 +66,7 @@
 </template>
 
 <script lang="ts" setup>
+import { vowelsSpecialDic } from '~~/game/cards';
 import { getTotalScorePlayers } from '~~/game/player';
 
 const { $idUser } = useNuxtApp();
@@ -79,9 +80,13 @@ const props = defineProps<{
 const totalScorePlayers = ref<TotalScorePlayer[]>([]);
 
 function getWord(cards: GameCard[]){
+  // {{ w?.acc ? vowelsSpecialDic[w.value][w.acc] ?? "" : w.jokerValue ?? w.value }}
   return cards.map(card => {
-    if(card.jokerValue) return card.jokerValue;
-    return card.value;
+    if(card.acc){
+      return vowelsSpecialDic[card.value][card.acc];
+    }
+
+    return card.jokerValue ?? card.value;
   }).join("") || "-";
 }
 </script>

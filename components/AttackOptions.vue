@@ -39,7 +39,8 @@ const props = defineProps<{
 function disabledAttackButton(){
   return !props.amountAttacks
     || !selectedIds.value.length
-    || (props.result?.cards.filter(c => c.value === '@').length ?? 0) >= props.amountAttacks
+    // || (props.result?.cards.filter(c => c.value === '@').length ?? 0) >= props.amountAttacks
+    // || props.result?.cards.some(c => c.value === '@')
     || isProtected.value
     || countShieldsInResult.value >= selectedIds.value.length
 }

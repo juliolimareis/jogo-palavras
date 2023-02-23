@@ -1,12 +1,13 @@
-import { handleAttack, restartGame, startGame } from "~~/game"
 import WebSocket, { WebSocketServer, } from "ws"
+import { handleAttack, handleConfirmRound, restartGame, giveUpPlayer, startGame } from "~~/game"
 import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, getHandCardsPlayer, getResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/game/player"
 declare global {
   var wss: WebSocketServer
   var rooms: Room[]
 }
 
-let wss: WebSocketServer
+let wss: WebSocketServer;
+const TIME_ROOM_COLETOR = 30; // minutes
 
 global.rooms = [
   {
@@ -24,6 +25,30 @@ global.rooms = [
   }
 ];
 
+setInterval(() => {
+  const rooms = global.rooms;
+  const idsToRemove = [] as number[];
+
+  console.log("idsToRemove: ", idsToRemove);
+
+  rooms.forEach((room, i) => {
+    if(room.prepareToRemoval){
+      idsToRemove.push(i);
+    }else{
+      if(!room.players.length){
+        room.prepareToRemoval = true;
+      }
+    }
+  });
+
+  idsToRemove.forEach(id => {
+    console.log("room has been removed: ", rooms[id].id)
+    rooms.splice(id, 1); 
+  });
+
+  console.log("number of room after coletor", rooms.length);
+}, TIME_ROOM_COLETOR * 60 * 1000);
+
 export default defineEventHandler(() => {  
   if (!global.wss) {
     // wss = new WebSocketServer({ server: event.node.res.socket?.server })
@@ -40,6 +65,12 @@ export default defineEventHandler(() => {
         const playerData: PlayerData = JSON.parse(message.toString());
 
         switch (playerData.channel) {
+          case "give-up":
+            giveUpPlayer(idRoom, idUser);
+            break;
+          case "confirm-round":
+            await handleConfirmRound(idRoom, idUser);
+            break;
           case "attack":
             if(idRoom && idUser && userName && playerData.data?.result && playerData.data?.cardsIds){
               if(handleAttack(idUser, playerData.data.result, playerData.data.cardsIds)){
@@ -208,7 +239,7 @@ export default defineEventHandler(() => {
       })
 
       socket.on("close", (code, reason) => {
-        // console.log("reason: %s:", reason);
+        console.log("reason: %s:", reason);
         console.log("code: %s:", code);
         
         removePlayer(idRoom, idUser);
@@ -225,4 +256,4 @@ export default defineEventHandler(() => {
     
     global.wss = wss
   }
-})
+});

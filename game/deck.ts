@@ -44,33 +44,34 @@ export function getCardShield(deckSize: number) {
 
   shieldCard.isShield = true;
   shieldCard.id = deckSize * 10;
+  shieldCard.points = 10;
 
   return shieldCard;
 }
 
 export function getDeckProfile(maxPlayers: number){
   let config = {
-    atk: 14, consonants: 3, joker: 13, vowels: 6
+    atk: 14, consonants: 3, joker: 13, vowels: 7
   }
 
   if(maxPlayers >= 2 && maxPlayers <= 4){
     config = {
-      atk: 14, consonants: 3, joker: 13, vowels: 6
+      atk: 14, consonants: 3, joker: 13, vowels: 7
     }
   }
   else if(maxPlayers > 4 && maxPlayers <= 6){
     config = {
-      atk: 19, consonants: 4, joker: 18, vowels: 8
+      atk: 19, consonants: 4, joker: 18, vowels: 9
     }
   }
   else if(maxPlayers > 6 && maxPlayers <= 8){
     config = {
-      atk: 23, consonants: 5, joker: 22, vowels: 9
+      atk: 23, consonants: 5, joker: 22, vowels: 10
     }
   }
   else{
     config = {
-      atk: 27, consonants: 6, joker: 26, vowels: 11
+      atk: 27, consonants: 6, joker: 26, vowels: 13
     }
   }
 

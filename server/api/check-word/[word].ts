@@ -2,9 +2,13 @@ export default defineEventHandler(async event => {
   const word = decodeURIComponent(event.context.params.word);
   let isValid = false;
 
-  return await new Promise((resolve, reject) => {
+  return await new Promise<{ isValid: boolean, word: string }>((resolve, reject) => {
     fetch(`https://api.dicionario-aberto.net/near/${word}`)
-      .then(res => resolve(res.json()));
+      .then(res => resolve(res.json()))
+      .catch(err => {
+        event.node.req.statusCode = 408;
+        reject(err);
+      });
 
     setTimeout(() => {
       event.node.req.statusCode = 408;
@@ -17,6 +21,7 @@ export default defineEventHandler(async event => {
 
     return { isValid, word };
   }).catch(err => {
+    event.node.req.statusCode = 408;
     console.log(err);
 
     return { isValid, word };
