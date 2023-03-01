@@ -342,8 +342,6 @@ function sendGameRestart(){
 function setOptionLatter(latter : string){
   if(isLoaderCheckWord.value) return;
 
-  console.log(selectedCard.value);
-
   if(selectedCard.value){
     if(selectedCard.value?.isJoker){
       selectedCard.value.jokerValue = latter;
