@@ -5,7 +5,7 @@
     </div>
 
     <div>
-      <span class="text-primary dark:text-white">Você pode destruir até <b>{{ amountAttacks ?? 0 }}</b> letras.</span>
+      <span class="text-primary dark:text-white">Você pode destruir até <b>{{ amountAttacks ?? 0 }}</b> {{ amountAttacks > 0 ? 'letras' : 'letra' }}.</span>
     </div>
 
     <div
@@ -39,10 +39,9 @@ const props = defineProps<{
 function disabledAttackButton(){
   return !props.amountAttacks
     || !selectedIds.value.length
-    // || (props.result?.cards.filter(c => c.value === '@').length ?? 0) >= props.amountAttacks
-    // || props.result?.cards.some(c => c.value === '@')
     || isProtected.value
     || countShieldsInResult.value >= selectedIds.value.length
+    || countShieldsInResult.value >= props.amountAttacks
 }
 
 function upsetSelectId(card: GameCard){
