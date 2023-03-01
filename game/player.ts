@@ -130,7 +130,7 @@ export function addWordPlayerInResults(idRoom: string, idPlayer: string, cards: 
   }
 }
 
-export function getTotalScorePlayers(results: Record<string, Result[]>){
+export function getTotalScorePlayers(results: Record<string, Result[]>, handCardsPerPlayer: HandCardsPerPlayer[]){
   const totalScorePlayer = [] as TotalScorePlayer[];
   const playersData = [] as Result[];
   let allResults = [] as Result[];
@@ -164,7 +164,17 @@ export function getTotalScorePlayers(results: Record<string, Result[]>){
       totalScore,
       idPlayer: player.idPlayer,
       playerName: player.playerName,
+      scoreHand: 0
     });
+  });
+
+  totalScorePlayer.forEach(tsp => {
+    const player = handCardsPerPlayer.find(p => p.idPlayer === tsp.idPlayer);
+
+    if(player){
+      tsp.scoreHand = player.handCards.reduce((t, c) => c.points + t, 0); 
+      tsp.totalScore += tsp.scoreHand;
+    }
   });
 
   return totalScorePlayer.sort((a, b) => {
