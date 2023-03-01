@@ -11,24 +11,32 @@
   </div>
 </template>
 
-<script lang="ts" setup>import { specialLatters } from '~~/game/cards';
+<script lang="ts" setup>
+import { specialLatters, special } from '~~/game/cards';
 
+const options = ref<string[]>([]);
 
-const props = defineProps({
-  onSelect: {
-    type: Function,
-  }
-});
-
-const options = [
-  "A", "B", "C", "Ç", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Z", "Y", "W",
-  ...specialLatters
-];
+const props = defineProps<{
+  onSelect: (latter: string) => void,
+  card?: GameCard,
+}>();
 
 function handleSelect(latter: string) {
   if(props.onSelect){
     props.onSelect(latter);
   }
 }
+
+onMounted(() => {
+  if(props.card){
+    if(props.card?.isJoker){
+      options.value = ["A", "B", "C", "Ç", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Z", "Y", "W",
+        ...specialLatters
+      ];
+    }else{
+      options.value = special;
+    }
+  }
+});
 
 </script>

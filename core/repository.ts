@@ -16,7 +16,7 @@ export const createRoom = (roomData: RoomData) => (
   }).then<CreateRoomResponse>(res => res.json())
 );
 
-export const checkWord = (word: string) => (
-  fetch(`/api/check-word/${word}`, { method: "GET", timeout: 5000 })
+export const checkWord = (word: string, lang?: "pt" | "en") => (
+  fetch(`/api/check-word/${word}?${new URLSearchParams({ lang: lang ?? "pt" })}`, { method: "GET" })
     .then(res => res.json())
 );

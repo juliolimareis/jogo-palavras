@@ -1,12 +1,13 @@
-import { restartGame, startGame } from "~~/game"
 import WebSocket, { WebSocketServer, } from "ws"
-import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, gerResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/game/player"
+import { handleAttack, handleConfirmRound, restartGame, giveUpPlayer, startGame } from "~~/game"
+import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, getHandCardsPlayer, getHandCardsPlayers, getResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/game/player"
 declare global {
   var wss: WebSocketServer
   var rooms: Room[]
 }
 
-let wss: WebSocketServer
+let wss: WebSocketServer;
+const TIME_ROOM_COLETOR = 30; // minutes
 
 global.rooms = [
   {
@@ -15,18 +16,40 @@ global.rooms = [
     tableCards: [],
     difficulty: "0",
     idAdmin: "17e186c9-a0e4-401f-961f-c54e706dc5c0",
-    maxRounds: 2,
+    maxRounds: 5,
     maxPlayers: 10,
     results: [],
     players: [],
     round: 0,
-    roundTimeout: 2,
+    roundTimeout: 3,
   }
 ];
 
-console.log("Init Socket");
+setInterval(() => {
+  const rooms = global.rooms;
+  const idsToRemove = [] as number[];
 
-export default defineEventHandler((event) => {  
+  console.log("idsToRemove: ", idsToRemove);
+
+  rooms.forEach((room, i) => {
+    if(room.prepareToRemoval){
+      idsToRemove.push(i);
+    }else{
+      if(!room.players.length){
+        room.prepareToRemoval = true;
+      }
+    }
+  });
+
+  idsToRemove.forEach(id => {
+    console.log("room has been removed: ", rooms[id].id)
+    rooms.splice(id, 1); 
+  });
+
+  console.log("number of room after coletor", rooms.length);
+}, TIME_ROOM_COLETOR * 60 * 1000);
+
+export default defineEventHandler(() => {  
   if (!global.wss) {
     // wss = new WebSocketServer({ server: event.node.res.socket?.server })
     wss = new WebSocketServer({ port: 3007 });
@@ -38,10 +61,39 @@ export default defineEventHandler((event) => {
 
       console.log("connected !");
 
-      socket.on("message", (message) => {
+      socket.on("message", async (message) => {
         const playerData: PlayerData = JSON.parse(message.toString());
 
         switch (playerData.channel) {
+          case "give-up":
+            giveUpPlayer(idRoom, idUser);
+            break;
+          case "confirm-round":
+            await handleConfirmRound(idRoom, idUser, playerData?.data?.confirm);
+            break;
+          case "attack":
+            if(idRoom && idUser && userName && playerData.data?.result && playerData.data?.cardsIds){
+              if(handleAttack(idUser, playerData.data.result, playerData.data.cardsIds)){
+                emitAll(
+                  idRoom, {
+                    channel: "attack",
+                    data: {
+                      results: getResultsRoom(idRoom),
+                    }
+                  }
+                );
+
+                emit(
+                  idRoom, idUser, {
+                    channel: "refresh-hand",
+                    data: {
+                      handCards: await getHandCardsPlayer(idRoom, idUser)
+                    }
+                  }
+                );
+              }
+            }
+            break;
           case "finish-round":
             console.log("[finished-round]");
 
@@ -53,8 +105,8 @@ export default defineEventHandler((event) => {
               emitAll( //retorna os dados com os pontos torais de cada jogador
                 idRoom, {
                   channel: "end-game",
-                  data: getServerDataPlayerInRoom(idRoom)
-                } as ServerData<ServerDataPlayerInRoom[]>
+                  data: getHandCardsPlayers(idRoom)
+                } as ServerData<HandCardsPerPlayer[]>
               );
             }
 
@@ -63,8 +115,8 @@ export default defineEventHandler((event) => {
             emitAll( // retorna results da room, para o front calcular como esta o rank no momento
               idRoom, {
                 channel: "result-round",
-                data: gerResultsRoom(idRoom)
-              } as ServerData
+                data: getResultsRoom(idRoom)
+              } as ServerData<Result[]>
             );
             
           break;
@@ -187,7 +239,7 @@ export default defineEventHandler((event) => {
       })
 
       socket.on("close", (code, reason) => {
-        // console.log("reason: %s:", reason);
+        console.log("reason: %s:", reason);
         console.log("code: %s:", code);
         
         removePlayer(idRoom, idUser);
@@ -204,4 +256,4 @@ export default defineEventHandler((event) => {
     
     global.wss = wss
   }
-})
+});

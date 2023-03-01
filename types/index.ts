@@ -7,12 +7,11 @@ declare global {
     idRoom?: string;
     data: T;
     name?: string;
-    channel: "game-restart" | "finish-round" | "round-timeout" | "enter-room" | "set-name" | "chat-message" | "set-ready" | "game-start" | "enter-game";
+    channel: "give-up" | "confirm-round" | "attack" | "game-restart" | "finish-round" | "round-timeout" | "enter-room" | "set-name" | "chat-message" | "set-ready" | "game-start" | "enter-game";
   }
 
   interface DataChat {
     message: string;
-
   }
 
   interface ServerDataPlayerInRoom {
@@ -27,6 +26,7 @@ declare global {
   interface ServerDataPlayerInGame {
     handCards: GameCard[];
     tableCards: GameCard[];
+    results: Result[];
     profilePlayersRoom: ServerDataPlayerInRoom[]
   }
 
@@ -37,7 +37,7 @@ declare global {
 
   //dados que o servidor envia
   interface ServerData<T = any> {
-    channel: "game-restart" | "result-round" | "next-round" | "end-game" | "round-timeout" | "players-in-room" | "chat-message" | "game-start" | "remove-player" | "game-start" | "player-in-game";
+    channel: "refresh-hand" | "attack" | "game-restart" | "result-round" | "next-round" | "end-game" | "round-timeout" | "players-in-room" | "chat-message" | "game-start" | "remove-player" | "game-start" | "player-in-game";
     data: T;
   }
 
@@ -58,6 +58,8 @@ declare global {
     tableCards: GameCard[];
     gameReady?: boolean;
     endGame?: boolean;
+    jumpRound?: boolean;
+    prepareToRemoval?: boolean;
   }
 
   interface PlayerRoom {
@@ -73,7 +75,8 @@ declare global {
     Apenas para saber se o jogador está online na tela do jogo. 
     Isso não se aplica na tela da sala, pois neste caso o jogador é removido da sala quando fica offline. 
     */
-    isOnline?: boolean; 
+    isOnline?: boolean;
+    confirmRound?: boolean;
   }
 
   interface Result {
@@ -82,6 +85,7 @@ declare global {
     cards: GameCard[];
     score: number;
     playerName: string;
+    hasAttacked?: boolean;
   }
 
   /**
@@ -92,10 +96,11 @@ declare global {
     value: string;
     points: number;
     image?: string;
-    acc?: string;
     isShield?: boolean;
     isSelected?: boolean;
     jokerValue?: string;
+    isJoker?: boolean;
+    acc?: "´" | "^" | "~" | ""
   }
 
   interface CheckRoomResponse {
@@ -105,16 +110,25 @@ declare global {
     gameReady?: boolean;
     roomExists: boolean;
     roomIsFull: boolean;
+    maxRounds?: number;
+    maxPlayers?: number;
+    roundTimeout?: number;
   }
 
   interface CreateRoomResponse {
     body: { idRoom: string, message: string } 
   }
 
-  type MessageStatus = "process-round" | "round-score" | "start" | "loading" | "offline" | "timeout" | "not-found" | "not-ready";
+  type MessageStatus = "disconnected" |"process-round" | "round-score" | "start" | "loading" | "offline" | "timeout" | "not-found" | "not-ready";
   interface TotalScorePlayer {
     playerName: string;
     totalScore: number;
     idPlayer: string;
+    scoreHand: number;
+  }
+
+  interface HandCardsPerPlayer {
+    idPlayer: string;
+    handCards: GameCard[];
   }
 }

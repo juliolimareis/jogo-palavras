@@ -6,15 +6,14 @@ export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: 
 
   if(room){
     const playerInRoom = room.players.find(p => p.id === idUser);
-
+    // player reconnect in room
     if(playerInRoom){
-      room.players = room.players.filter(p => p.id !== idUser);
+      playerInRoom.ws.close();
       playerInRoom.ws = ws;
-      room.players.push(playerInRoom);
 
       return true;
     }else{
-      //quantidade maxima de jogadores
+      // quantidade maxima de jogadores
       if(room.players.length <= room.maxPlayers){
         room.players.push({
           ws,
@@ -35,6 +34,19 @@ export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: 
   return false;
 }
 
+export function getHandCardsPlayers(idRoom: string): HandCardsPerPlayer[] {
+  const room = getRoom(idRoom);
+
+  if(room){
+    return room.players.map(p => ({
+      idPlayer: p.id,
+      handCards: p.handCards,
+    }));
+  }
+
+  return [];
+}
+
 export function getServerDataPlayerInRoom(idRoom: string): ServerDataPlayerInRoom[] {
   const room = getRoom(idRoom);
 
@@ -52,10 +64,23 @@ export function getServerDataPlayerInRoom(idRoom: string): ServerDataPlayerInRoo
   return [];
 }
 
-export function gerResultsRoom(idRoom: string) {
+export function getHandCardsPlayer(idRoom: string, idPlayer: string){
+  return connectRoom(idRoom, idPlayer).then(({ player }) => {
+    return player.handCards;    
+  }).catch(err => {
+    console.log(err);
+    return [];
+  }); 
+}
+
+export function getResultsRoom(idRoom: string) {
   const room = getRoom(idRoom);
 
   if(room){
+    room.results.forEach(r => {
+      r.score = sumWordPoints(r.cards);
+    });
+
     return room.results;
   }
 
@@ -63,7 +88,7 @@ export function gerResultsRoom(idRoom: string) {
 }
 
 export function identTotalScore(results: Result[]) {
-  const roundsSet = new Set<number>(results.map(r => r.round));
+  const roundsSet = new Set<number>(results.map(r => r.round).reverse());
   const resultPerRound: Record<string, Result[]> = {};
 
   roundsSet.forEach((r, i) => {
@@ -105,7 +130,7 @@ export function addWordPlayerInResults(idRoom: string, idPlayer: string, cards: 
   }
 }
 
-export function getTotalScorePlayers(results: Record<string, Result[]>){
+export function getTotalScorePlayers(results: Record<string, Result[]>, handCardsPerPlayer: HandCardsPerPlayer[]){
   const totalScorePlayer = [] as TotalScorePlayer[];
   const playersData = [] as Result[];
   let allResults = [] as Result[];
@@ -139,7 +164,17 @@ export function getTotalScorePlayers(results: Record<string, Result[]>){
       totalScore,
       idPlayer: player.idPlayer,
       playerName: player.playerName,
+      scoreHand: 0
     });
+  });
+
+  totalScorePlayer.forEach(tsp => {
+    const player = handCardsPerPlayer.find(p => p.idPlayer === tsp.idPlayer);
+
+    if(player){
+      tsp.scoreHand = player.handCards.reduce((t, c) => c.points + t, 0); 
+      tsp.totalScore += tsp.scoreHand;
+    }
   });
 
   return totalScorePlayer.sort((a, b) => {
@@ -161,6 +196,10 @@ export function getServerDataPlayerInGame(idRoom: string, idPlayer: string, ws?:
       const profilePlayersRoom = getServerDataPlayerInRoom(idRoom);
 
       if(ws){
+        if(player.ws){
+          player.ws.close();
+        }
+
         player.ws = ws;
       }
       
@@ -168,6 +207,7 @@ export function getServerDataPlayerInGame(idRoom: string, idPlayer: string, ws?:
         handCards,
         tableCards,
         profilePlayersRoom,
+        results: room.results
       };
     }
   }
@@ -255,19 +295,34 @@ export function setReady(idRoom: string, idPlayer: string, isReady: boolean){
 
 export function removePlayer(idRoom: string, idPlayer: string){
   const room = getRoom(idRoom);
-
-  //só remove o usuário caso o jogo não tenha começado
+  
   if(room && !room.gameReady){
-    room.players = room.players.filter(p => p.id !== idPlayer);
-  }
+    const indexPlayer = room?.players.findIndex(p => p.id === idPlayer)
+    
+    if(indexPlayer !== -1){
+      // só remove o jogador caso o jogo não tenha começado
+      room.players.splice(indexPlayer, 1);
+      console.log("player removed from room");
+    }
+ }
 }
 
-export function connectRoom(idRoom: string){
-  return new Promise<Room>((resolve, reject) => {
+export function connectRoom(idRoom: string, idPlayer: string){
+  return new Promise<{ room: Room, player: PlayerRoom }>((resolve, reject) => {
     const room = getRoom(idRoom);
-
+    
     if(room){
-      resolve(room);
-    } reject("room not found");
+      if(idPlayer){
+        const player = extractPlayerRoom(room, idPlayer);
+
+        if(player){
+          resolve({ room, player });
+        }
+
+        reject("player not found");
+      }
+    } 
+    
+    reject("room not found");
   })
 }

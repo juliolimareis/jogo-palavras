@@ -2,6 +2,36 @@ type DeckCard = Record<string, GameCard>;
 
 export const Vowels: GameCard["value"][] = ["A", "E", "I", "O", "U"];
 export const specialLatters = ["Á", "Â", "Ã", "Í", "Ú", "Ê", "É", "Ó", "Ô", "Õ"];
+export const specialDic = {"Á": "´", "Â": "^", "Ã": "~", "Í": "´", "Ú": "´", "Ê": "^", "É": "´", "Ó": "´", "Ô": "^", "Õ": "~"};
+// export const vowelsSpecialDic = {"A": ["Á", "Â", "Ã", "A"], "I": ["Í"], "U": ["Ú", "U"], "E": ["É", "Ê", "E"], "O": ["Ó", "Ô", "Õ", "O"]};
+export const vowelsSpecialDic = {
+  "A": {
+    "´": "Á",
+    "^": "Â",
+    "~": "Ã"
+  }, 
+  "E": {
+    "´": "É",
+    "^": "Ê",
+    "~": "Ẽ"
+  },  
+  "I": {
+    "´": "Í",
+    "^": "Î",
+    "~": "ĩ"
+  },  
+  "O": {
+    "´": "Ó",
+    "^": "Ô",
+    "~": "Õ"
+  },  
+  "U": {
+    "´": "Ú",
+    "^": "Û",
+    "~": "Ũ"
+  },  
+}  
+export const special = ["´", "^", "~"];
 
 export const Cards: DeckCard = {
   A:{
@@ -102,10 +132,37 @@ export const Cards: DeckCard = {
   },
   "?":{
     value: "?",
-    points: 10
+    points: 10,
+    isJoker: true
   },
   ATK:{
     value: "ATK",
-    points: 10
+    points: 1
   },
 };
+
+export function getCardsLatters() {
+  const cardsLatters = [] as GameCard[];
+  
+  Object.keys(Cards).map(k => {
+    if(Cards[k].value !== "ATK" && Cards[k].value !== "?"){
+      cardsLatters.push({ ...Cards[k]});
+    } 
+  }); 
+
+  return cardsLatters;
+}
+
+export function showWord(cards: GameCard[]){
+  let word = "";
+
+  cards.forEach(c => {
+    if(c.jokerValue){
+      word += c.jokerValue;
+    }else if(c.acc){
+      word += vowelsSpecialDic[c.value][c.acc];
+    }
+  });
+
+  return word;
+}

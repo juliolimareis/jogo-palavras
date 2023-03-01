@@ -1,16 +1,118 @@
-import { connectRoom, emitAll, getRoom } from "~~/game/player";
-import { getDeckProfile, getHand, getNextCard, getTableCards } from "./deck";
+import { connectRoom, emit, emitAll, extractPlayerRoom, getRoom, getRoomPlayer } from "~~/game/player";
+import { getCardShield, getDeckProfile, getHand, getNextCard, getTableCards } from "./deck";
 
-const TIMEOUT_TO_NEXT_ROUND = 10; // 5 seconds
+const TIMEOUT_TO_NEXT_ROUND = 12; // seconds to next round
+
+export async function giveUpPlayer(idRoom: string, idPlayer: string){
+  connectRoom(idRoom, idPlayer)
+    .then(({ room, player, }) => {
+      player.ws.close();
+
+      const indexPlayer = room.players.indexOf(player);
+
+      if(indexPlayer !== -1){
+        room.players.splice(indexPlayer, 1);
+      }
+
+    });
+}
+
+export async function handleConfirmRound(idRoom: string, idPlayer: string, confirm: boolean){
+  return connectRoom(idRoom, idPlayer)
+    .then(({ room, player }) => {
+      player.confirmRound = confirm;
+
+      if(!room.players.some(p => !p.confirmRound)){
+        room.jumpRound = true;
+        return true;
+      }
+
+      return false;
+    }).catch(err => { 
+      console.log(err);
+      return false;
+    });
+}
+
+export function handleAttack(idPlayer: string, result: Result, cardsIds: number[]){
+  const room = getRoomPlayer(idPlayer);
+  
+  if(room){
+    const attackingPlayer = extractPlayerRoom(room, idPlayer);
+    const playerVictim = extractPlayerRoom(room, result.idPlayer);
+    
+    if(attackingPlayer && playerVictim){
+
+      const resultIndex = room.results.findIndex(
+        r => r.round === result.round && r.idPlayer === result.idPlayer
+      );
+  
+      if(resultIndex !== -1){
+        const amountShieldsInResult = room.results[resultIndex].cards.filter(c => c.isShield);
+        const amountAttacksInHand = attackingPlayer.handCards.filter(c => c.value === "ATK").length;
+
+        if(amountAttacksInHand > amountShieldsInResult.length){
+  
+          if(amountShieldsInResult.length){          
+            amountShieldsInResult.forEach(c => {
+              playerVictim?.handCards.push({...c})
+            });
+  
+            playerVictim?.ws.send(JSON.stringify({
+              channel: "refresh-hand",
+              data: {
+                handCards: playerVictim.handCards
+              }
+            }));
+          }
+  
+          result.hasAttacked = true;
+    
+          result.cards.forEach(c => {
+            if(cardsIds.includes(Number(c.id))){
+              c.value = "@";
+              c.points = 0;
+              c.isShield = false;
+            }
+          });
+    
+          room.results[resultIndex] = result;
+          
+          //quantidade de cartas de ataques que vão se retiradas.
+          let countCards = amountShieldsInResult.length + 1;
+  
+          attackingPlayer.handCards = attackingPlayer.handCards.filter(c => {
+            if(countCards > 0 && c.value === "ATK"){
+              countCards--;
+  
+              return false;
+            }
+  
+            return true;
+          });
+    
+          console.log("handCardsPlayer: ", attackingPlayer?.handCards);
+    
+          return true;
+        }
+  
+      }
+    }
+  }
+
+  return false;
+}
 
 export function restartGame(idRoom: string, idPlayer: string){
-  connectRoom(idRoom).then(room => {
+  connectRoom(idRoom, idPlayer).then(({ room }) => {
     if(!room.gameReady && room.idAdmin === idPlayer){
       room.deck = [],
       room.results = [],
       room.round = 0,
       room.tableCards = []
     }
+
+    room.players.forEach(p => p.confirmRound = false);
 
     startGame(idRoom);
   });
@@ -22,12 +124,15 @@ export function startGame(idRoom: string){
   if(room){
     room.gameReady = true;
     room.endGame = false;
+    room.jumpRound = false;
     room.deck = getDeckProfile(room.maxPlayers);
 
     // distribui as cartas dos jogadores
     room.players.forEach(p => {
       const { deck, hand } = getHand(room.deck);
-
+      const cardShield = getCardShield(deck.length);
+      
+      hand.push(cardShield);
       room.deck = deck;
       p.handCards = hand;
     });
@@ -65,7 +170,11 @@ function startTimeRound(room: Room){
   
   const interval = setInterval(() => {
 
-    timeout--;
+    if(room.jumpRound){
+      timeout = 0; 
+    }else{
+      timeout--;
+    }
 
     emitAll(room.id, {
       channel: "round-timeout",
@@ -75,7 +184,7 @@ function startTimeRound(room: Room){
     if(timeout === 0){
       clearInterval(interval);
 
-      if(room.round < room.maxRounds){
+      if((room.round + 1) < room.maxRounds){
         console.log("[startTimeRound] - timeNextRound");
         timeNextRound(room);
       }else{
@@ -98,9 +207,20 @@ function timeNextRound(room: Room){
 function startNextRound(room: Room){
   console.log("[startNextRound] - Init");
 
+  room.jumpRound = false;
+
   // add uma carta para cada jogador
   room.players.forEach(p => {
     const { card, deck } = getNextCard(room.deck);
+
+    //check player don't have card shield in hand
+    if(!p.handCards.some(c => c.isShield)){
+      const cardShield = getCardShield(deck.length);
+
+      p.handCards.push(cardShield);
+    }
+
+    p.confirmRound = false;
 
     room.deck = deck;
     p.handCards.push(card);

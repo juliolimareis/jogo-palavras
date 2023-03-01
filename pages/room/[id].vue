@@ -4,114 +4,121 @@
       Takopi
     </Header>
 
-    <div v-if="checkRoomStatus === 'room-not-exist'" class="text-center text-red-500">
+    <div v-if="checkRoomStatus === 'room-not-exist'" class="text-center text-red-500 font-bold text-lg mt-10">
       Sala não encontrada.
     </div>
 
-    <div v-else-if="checkRoomStatus === 'room-full'" class="text-center text-red-500">
-      Sala atingiu o limite máximo de jogadores.
+    <div v-else-if="checkRoomStatus === 'room-full'" class="text-center text-red-500 font-bold text-lg mt-10">
+      A sala atingiu o limite máximo de jogadores.
     </div>
 
-    <div v-else-if="checkRoomStatus === 'room-start'" class="text-center mt-3">
-      <span class="font-bold">Link da sala: </span>
-      
-      <span class="font-bold text-primary">
-        <input
-          id="linkRoom"
-          class="rounded-md bg-gray-300 h-9"
-          type="text"
-          disabled
-          :value="url"
-        />
-      </span>
-      
-      <Button
-        :class="`ml-2 ${isClipboard ? 'bg-green-600' : ''}`"
-        @click="clipboardUrl"
-      >
-        {{ isClipboard ? "Copiado" : "Copiar" }}
-      </Button>
-
-     <div class="mt-5">
-      <!-- <label class="text-black">Nickname: </label> -->
-      <div>
-        <span class="font-bold">Nickname: </span>
-        <span>
-          <input
-            class="rounded-md bg-gray-300 h-9"
-            placeholder=" nickname"
-            type="text"
-            :disabled="!editName"
-            v-model="name"
-          >
-        <Button v-if="editName" @click="setName()" class="bg-green-600 ml-3 mt-3">
-          Salvar
-        </Button>
+    <div v-else-if="checkRoomStatus === 'room-start'">
+      <div class="text-center mt-3">
+        <span class="font-bold">Link da sala: </span>
         
-        <Button v-else @click="editName = true" class="bg-primary ml-3  mt-3">
-          Editar
-        </Button>
-        </span>
-      </div>
-      
-      <!-- <p v-if="isSalveName" class="text-green-500">Nome salvo com sucesso!</p> -->
-     </div> 
-    </div>
-
-    <div class="grid grid-cols-1 gap-4 m-auto mt-4">
-      <div class="m-auto w-full">
-        <Chat :chatMessage="chatMessage"/>
-      </div>
-
-      <div v-if="status" class="border-2 rounded-md border-gray-400 w-full h-56 overflow-y-auto">
-        <span v-for="p in players" :key="p.id">
-          <Profile
-            v-if="p.id === idAdmin"
-            class="float-left m-2"
-            :name="p.name"
-            :is-ready="p.isReady"
-            :is-admin="true"
-          />
-          <Profile
-            v-else
-            class="float-left m-2"
-            :name="p.name"
-            :is-ready="p.isReady"
+        <span class="font-bold text-primary">
+          <input
+            id="linkRoom"
+            class="rounded-md bg-gray-300 h-9"
+            type="text"
+            disabled
+            :value="url"
           />
         </span>
-      </div>
-
-      <div v-else class="text-red-500 text-center font-bold text-lg">
-        Você está offline :(
-      </div>
-    </div>
-
-    <div class="w-auto text-center mt-10">
-      <template v-if="isAdmin">
-        <Button 
-          class="bg-green-600"
-          @click="gameStart"
-          :disabled="!isReady && players.filter((p) => p.isReady).length < 1"
+        
+        <Button
+          :class="`ml-2 ${isClipboard ? 'bg-green-600' : ''}`"
+          @click="clipboardUrl"
         >
-          Iniciar
+          {{ isClipboard ? "Copiado" : "Copiar" }}
         </Button>
-      </template>
+  
+        <div class="mt-5">
+          <span class="font-bold">Nickname: </span>
+          <span>
+            <input
+              class="rounded-md bg-gray-300 h-9"
+              placeholder=" nickname"
+              type="text"
+              :disabled="!editName"
+              v-model="name"
+            />
+              <Button v-if="editName" @click="setName()" class="bg-green-600 ml-3 mt-3">
+                Salvar
+              </Button>
 
-      <template v-else>
-        <Button v-if="isReady" @click="setReady(false)" class="bg-orange-600">
-          Não Estou Pronto!
-        </Button>
-        <Button v-else @click="setReady(true)" class="bg-green-600">
-          Estou Pronto!
-        </Button>
-      </template>
-
-      <div class="mt-4">
-        <Button @click="useRouter().replace('/')" class="bg-orange-500">
-          Sair
-        </Button>
+              <Button v-else @click="editName = true" class="bg-primary ml-3  mt-3">
+                Editar
+              </Button>
+          </span>
+        </div> 
       </div>
+  
+      <div class="grid grid-cols-1 gap-4 m-auto mt-4">
+        <div class="m-auto w-full">
+          <Chat :chatMessage="chatMessage"/>
+        </div>
+  
+        <div class="text-center">
+          <span>
+            Máximo de jogadores: <b>{{ dataRoom?.maxPlayers }}</b>
+            | Rodadas: <b>{{ dataRoom?.maxRounds }}</b>
+            | Tempo da Rodada: <b>{{ dataRoom?.roundTimeout }} {{ (dataRoom?.roundTimeout ?? 0) > 1 ? 'minutos' : 'minuto' }}</b>
+            | Online: <b>{{ players.length }}</b>
+          </span>
+        </div>
+  
+        <div v-if="status" class="border-2 rounded-md border-gray-400 w-full h-56 overflow-y-auto">
+          <span v-for="p in players" :key="p.id">
+            <Profile
+              v-if="p.id === idAdmin"
+              class="float-left m-2"
+              :name="p.name"
+              :is-ready="p.isReady"
+              :is-admin="true"
+            />
+            <Profile
+              v-else
+              class="float-left m-2"
+              :name="p.name"
+              :is-ready="p.isReady"
+            />
+          </span>
+        </div>
+  
+        <div v-else class="text-red-500 text-center font-bold text-lg">
+          Você está offline :(
+        </div>
+      </div>
+  
+      <div class="w-auto text-center mt-10">
+        <template v-if="isAdmin">
+          <Button 
+            class="bg-green-600"
+            @click="gameStart"
+            :disabled="!isReady && players.filter((p) => p.isReady).length < 1"
+          >
+            Iniciar
+          </Button>
+        </template>
+  
+        <template v-else>
+          <Button v-if="isReady" @click="setReady(false)" class="bg-orange-600">
+            Não Estou Pronto!
+          </Button>
+          <Button v-else @click="setReady(true)" class="bg-green-600">
+            Estou Pronto!
+          </Button>
+        </template>
+  
+        <div class="mt-4">
+          <Button @click="giveUp" class="bg-orange-500">
+            Abandonar
+          </Button>
+        </div>
+      </div> 
     </div>
+
   </div>
 </template>
 
@@ -133,6 +140,7 @@ const players = ref<Array<ServerDataPlayerInRoom>>([]);
 const editName = ref(false);
 const checkRoomStatus = ref<"room-full" | "room-start" | "room-not-exist">();
 const idAdmin = ref();
+const dataRoom = ref<CheckRoomResponse>();
 
 const clipboardUrl = () => {
   clipboard(url.value).then(() => isClipboard.value = true);
@@ -141,14 +149,11 @@ const clipboardUrl = () => {
 
 onMounted(async () => {
   const idRoom = route.params.id as string;
-
-  console.log("idRoom", idRoom);
-  console.log("idUser", $idUser);
-  console.log("userName", $userName);
-
   const checkRoomResponse = await checkRoom(idRoom);
 
   if(checkRoomResponse?.roomExists){
+    dataRoom.value = checkRoomResponse;
+
     if(checkRoomResponse?.gameReady){
       router.replace(`/game/${checkRoomResponse.idRoom}`);
       return;
@@ -301,4 +306,14 @@ function clipboard(text: string) {
     }
 }
 
+function giveUp() {
+  $socket.send(
+    JSON.stringify({
+      channel: "give-up",
+      data: {}   
+    })
+  );
+
+  router.replace("/");
+}
 </script>

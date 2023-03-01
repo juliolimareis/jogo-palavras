@@ -3,8 +3,6 @@ import { v4 as uuid, } from "uuid";
 export default defineNuxtPlugin(() => {
   if (process.server) return;
 
-  console.log("pass here!");
-
   const route = useRoute();
 
   const idRoom = route.params.id as string;

@@ -1,11 +1,13 @@
-import { Vowels, Cards } from './cards';
+import { Vowels, Cards, getCardsLatters } from './cards';
 
 export function getTableCards(deck: GameCard[]){
   const table = [];
   
-  for(let i in Array.from(Array(4))){
-    table.push(deck[0]);
-    deck.shift();
+  for (let i = 0; i < deck.length && table.length !== 4; i++) {
+    if(deck[i].value !== "ATK" && deck[i].value !== "?"){
+      table.push(deck[i]);
+      deck.splice(i, 1);
+    }
   }
 
   return {
@@ -36,29 +38,40 @@ export function getHand(deck: GameCard[]){
   }
 }
 
+export function getCardShield(deckSize: number) {
+  const cardsLatters = getCardsLatters();
+  const shieldCard = cardsLatters[Math.floor(Math.random() * cardsLatters.length)];
+
+  shieldCard.isShield = true;
+  shieldCard.id = deckSize * 10;
+  shieldCard.points = 10;
+
+  return shieldCard;
+}
+
 export function getDeckProfile(maxPlayers: number){
   let config = {
-    atk: 4, consonants: 2, joker: 4, vowels: 4
+    atk: 14, consonants: 3, joker: 13, vowels: 7
   }
 
-  if(maxPlayers > 2 && maxPlayers <= 4){
+  if(maxPlayers >= 2 && maxPlayers <= 4){
     config = {
-      atk: 8, consonants: 2, joker: 6, vowels: 5
+      atk: 14, consonants: 3, joker: 13, vowels: 7
     }
   }
   else if(maxPlayers > 4 && maxPlayers <= 6){
     config = {
-      atk: 12, consonants: 3, joker: 10, vowels: 6
+      atk: 19, consonants: 4, joker: 18, vowels: 9
     }
   }
   else if(maxPlayers > 6 && maxPlayers <= 8){
     config = {
-      atk: 16, consonants: 3, joker: 12, vowels: 7
+      atk: 23, consonants: 5, joker: 22, vowels: 10
     }
   }
   else{
     config = {
-      atk: 20, consonants: 4, joker: 16, vowels: 8
+      atk: 27, consonants: 6, joker: 26, vowels: 13
     }
   }
 
@@ -87,9 +100,9 @@ export function createDeck({ vowels, consonants, joker, atk }: DeckConfig){
    deck.push(getCardCopy("?"));
   }
   
-  // for(let i in Array.from(Array(atk))){
-  //   deck.push(getCardCopy("ATK"));
-  // }
+  for(let i in Array.from(Array(atk))){
+    deck.push(getCardCopy("ATK"));
+  }
 
   // add ids
   deck.forEach((c, i) => { c.id = i });
