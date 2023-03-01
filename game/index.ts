@@ -49,10 +49,11 @@ export function handleAttack(idPlayer: string, result: Result, cardsIds: number[
   
       if(resultIndex !== -1){
         const amountShieldsInResult = room.results[resultIndex].cards.filter(c => c.isShield);
+        const amountAttacksInHand = attackingPlayer.handCards.filter(c => c.value === "ATK").length;
+
+        if(amountAttacksInHand > amountShieldsInResult.length){
   
-        if(cardsIds.length > amountShieldsInResult.length){
-  
-          if(amountShieldsInResult){          
+          if(amountShieldsInResult.length){          
             amountShieldsInResult.forEach(c => {
               playerVictim?.handCards.push({...c})
             });
@@ -76,8 +77,9 @@ export function handleAttack(idPlayer: string, result: Result, cardsIds: number[
           });
     
           room.results[resultIndex] = result;
-    
-          let countCards = cardsIds.length;
+          
+          //quantidade de cartas de ataques que vão se retiradas.
+          let countCards = amountShieldsInResult.length + 1;
   
           attackingPlayer.handCards = attackingPlayer.handCards.filter(c => {
             if(countCards > 0 && c.value === "ATK"){
