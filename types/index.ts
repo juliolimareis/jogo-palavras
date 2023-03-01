@@ -124,5 +124,11 @@ declare global {
     playerName: string;
     totalScore: number;
     idPlayer: string;
+    scoreHand: number;
+  }
+
+  interface HandCardsPerPlayer {
+    idPlayer: string;
+    handCards: GameCard[];
   }
 }

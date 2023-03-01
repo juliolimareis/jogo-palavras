@@ -34,6 +34,19 @@ export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: 
   return false;
 }
 
+export function getHandCardsPlayers(idRoom: string): HandCardsPerPlayer[] {
+  const room = getRoom(idRoom);
+
+  if(room){
+    return room.players.map(p => ({
+      idPlayer: p.id,
+      handCards: p.handCards,
+    }));
+  }
+
+  return [];
+}
+
 export function getServerDataPlayerInRoom(idRoom: string): ServerDataPlayerInRoom[] {
   const room = getRoom(idRoom);
 

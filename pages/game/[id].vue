@@ -40,7 +40,7 @@
       <span>Preparando próximo turno ...</span>
     </div>
 
-    <Score :results="results" :isGameOver="isGameOver" :isAttack="isAttack" :on-attack="onRequestAttack"/>
+    <Score :results="results" :isGameOver="isGameOver" :isAttack="isAttack" :on-attack="onRequestAttack" :hand-cards-per-player="handCardsPerPlayer"/>
   </div>
 
   <div>
@@ -146,6 +146,7 @@ const isAttack = ref(true);
 const selectedResultAttack = ref<Result>();
 const confirmRound = ref(false);
 const maxRounds = ref(0);
+const handCardsPerPlayer = ref<HandCardsPerPlayer[]>([]);
 
 onMounted(async () => {
   const checkRoomResponse = await checkRoom($idRoom);
@@ -242,6 +243,7 @@ onMounted(async () => {
           status.value = "round-score";
           isGameOver.value = true;
           isAttack.value = false;
+          handCardsPerPlayer.value = res.data;
           closeModalAttack();
           closeModalOptionCard();
           break;

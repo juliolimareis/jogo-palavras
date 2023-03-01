@@ -105,8 +105,8 @@ export default defineEventHandler(() => {
               emitAll( //retorna os dados com os pontos torais de cada jogador
                 idRoom, {
                   channel: "end-game",
-                  data: getServerDataPlayerInRoom(idRoom)
-                } as ServerData<ServerDataPlayerInRoom[]>
+                  data: getHandCardsPlayers(idRoom)
+                } as ServerData<HandCardsPerPlayer[]>
               );
             }
 

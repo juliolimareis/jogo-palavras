@@ -7,17 +7,19 @@
         <tr>
           <th scope="col" class="px-6 py-3">Rank</th>
           <th scope="col" class="px-6 py-3">Jogador</th>
+          <th scope="col" class="px-6 py-3">Pontos na mão</th>
           <th scope="col" class="px-6 py-3">Pontos Totais</th>
         </tr>
       </thead>
       <tbody>
         <tr 
-          v-for="totalScore, i in getTotalScorePlayers(results)"
+          v-for="totalScore, i in getTotalScorePlayers(results, handCardsPerPlayer)"
           :key="i"
           :class="`border-2 ${$idUser === totalScore.idPlayer ? 'border-primary' : ''} bg-white dark:bg-gray-800`"
         >
           <td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ i + 1 }}°</td>
           <td class="px-6 py-4">{{ totalScore.playerName }}</td>
+          <td class="px-6 py-4">{{ totalScore.scoreHand }}</td>
           <td class="px-6 py-4">{{ totalScore.totalScore }}</td>
         </tr>
       </tbody>
@@ -72,12 +74,12 @@ import { getTotalScorePlayers } from '~~/game/player';
 const { $idUser } = useNuxtApp();
 
 const props = defineProps<{
-  results: Record<string, Result[]>,
-  isGameOver: boolean,
-  onAttack: (result: Result) => void,
-  isAttack: boolean,
+  results: Record<string, Result[]>;
+  isGameOver: boolean;
+  onAttack: (result: Result) => void;
+  isAttack: boolean;
+  handCardsPerPlayer: HandCardsPerPlayer[];
 }>();
-const totalScorePlayers = ref<TotalScorePlayer[]>([]);
 
 function getWord(cards: GameCard[]){
   // {{ w?.acc ? vowelsSpecialDic[w.value][w.acc] ?? "" : w.jokerValue ?? w.value }}
@@ -89,4 +91,5 @@ function getWord(cards: GameCard[]){
     return card.jokerValue ?? card.value;
   }).join("") || "-";
 }
+
 </script>
