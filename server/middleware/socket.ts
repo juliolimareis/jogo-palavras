@@ -16,12 +16,12 @@ global.rooms = [
     tableCards: [],
     difficulty: "0",
     idAdmin: "17e186c9-a0e4-401f-961f-c54e706dc5c0",
-    maxRounds: 10,
+    maxRounds: 5,
     maxPlayers: 10,
     results: [],
     players: [],
     round: 0,
-    roundTimeout: 1,
+    roundTimeout: 3,
   }
 ];
 
