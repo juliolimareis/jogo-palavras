@@ -17,10 +17,10 @@ export async function giveUpPlayer(idRoom: string, idPlayer: string){
     });
 }
 
-export async function handleConfirmRound(idRoom: string, idPlayer: string){
+export async function handleConfirmRound(idRoom: string, idPlayer: string, confirm: boolean){
   return connectRoom(idRoom, idPlayer)
     .then(({ room, player }) => {
-      player.confirmRound = true;
+      player.confirmRound = confirm;
 
       if(!room.players.some(p => !p.confirmRound)){
         room.jumpRound = true;
@@ -109,6 +109,8 @@ export function restartGame(idRoom: string, idPlayer: string){
       room.round = 0,
       room.tableCards = []
     }
+
+    room.players.forEach(p => p.confirmRound = false);
 
     startGame(idRoom);
   });
@@ -215,6 +217,8 @@ function startNextRound(room: Room){
 
       p.handCards.push(cardShield);
     }
+
+    p.confirmRound = false;
 
     room.deck = deck;
     p.handCards.push(card);

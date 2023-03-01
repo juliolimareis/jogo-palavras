@@ -1,6 +1,6 @@
 import WebSocket, { WebSocketServer, } from "ws"
 import { handleAttack, handleConfirmRound, restartGame, giveUpPlayer, startGame } from "~~/game"
-import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, getHandCardsPlayer, getResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/game/player"
+import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, getHandCardsPlayer, getHandCardsPlayers, getResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/game/player"
 declare global {
   var wss: WebSocketServer
   var rooms: Room[]
@@ -69,7 +69,7 @@ export default defineEventHandler(() => {
             giveUpPlayer(idRoom, idUser);
             break;
           case "confirm-round":
-            await handleConfirmRound(idRoom, idUser);
+            await handleConfirmRound(idRoom, idUser, playerData?.data?.confirm);
             break;
           case "attack":
             if(idRoom && idUser && userName && playerData.data?.result && playerData.data?.cardsIds){
@@ -116,7 +116,7 @@ export default defineEventHandler(() => {
               idRoom, {
                 channel: "result-round",
                 data: getResultsRoom(idRoom)
-              } as ServerData
+              } as ServerData<Result[]>
             );
             
           break;

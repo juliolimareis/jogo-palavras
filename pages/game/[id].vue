@@ -103,7 +103,7 @@
       <div class="flex justify-between p-3">
         <Button class="" @click="onCheckWord" :disabled="confirmRound || isLoaderCheckWord || selectedCards.length < 2">{{isLoaderCheckWord ? 'Verificando' : 'Verificar Palavra'}}</Button>
         <Button class="" @click="status = 'round-score'">Rank</Button>
-        <Button class="bg-green-400" @click="onConfirmRound" :disabled="!isWordValid || confirmRound">Finalizar</Button>
+        <Button class="bg-yellow-500" @click="onConfirmRound">{{ confirmRound ? 'Não terminei!' : 'Finalizar' }}</Button>
         <Button class="bg-red-400 float-right" :disabled="isLoaderCheckWord || confirmRound" @click="resetWord" >Apagar</Button>
       </div>
     </div>
@@ -272,11 +272,11 @@ function sendWord(data: { cards: GameCard[] }){
 }
 
 function onConfirmRound() {
-  confirmRound.value = true;
+  confirmRound.value = !confirmRound.value;
 
   $socket.send(JSON.stringify({
     channel: "confirm-round",
-    data: {}
+    data: {confirm: confirmRound.value}
   }));
 }
 // TODO handleCardOption
