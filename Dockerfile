@@ -1,7 +1,11 @@
 # Stage 1 - build
 FROM node:lts-alpine as builder
 WORKDIR /app
-COPY . .
+
+RUN apk add --no-cache git
+RUN apk add --no-cache openssh
+
+RUN git clone https://github.com/juliolimareis/jogo-palavras.git /app
 
 RUN npm install -g pnpm
 RUN pnpm i
