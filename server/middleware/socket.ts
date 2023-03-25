@@ -52,7 +52,10 @@ setInterval(() => {
 export default defineEventHandler(() => {  
   if (!global.wss) {
     // wss = new WebSocketServer({ server: event.node.res.socket?.server })
-    wss = new WebSocketServer({ port: 3007 });
+    wss = new WebSocketServer({ port: Number(process.env.WEBSOCKET_PORT ?? 0) ?? 3007 });
+
+    // console.log(`WEBSOCKET_PORT => ${process.env.WEBSOCKET_PORT}`);
+    // console.log(`SERVER_WEBSOCKET => ${process.env.SERVER_WEBSOCKET}`);
 
     wss.on("connection", (socket: WebSocket) => {
       let idRoom = "";
