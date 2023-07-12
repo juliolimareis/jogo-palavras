@@ -141,6 +141,196 @@ export const Cards: DeckCard = {
   },
 };
 
+
+export const hiragana = {
+  あ: {
+    'value': 'あ',
+    'points': 1
+  },
+  い: {
+    'value': 'い',
+    'points': 1
+  },
+  う: {
+    'value': 'う',
+    'points': 1
+  },
+  え: {
+    'value': 'え',
+    'points': 1
+  },
+  お: {
+    'value': 'お',
+    'points': 1
+  },
+  か: {
+    'value': 'か',
+    'points': 1
+  },
+  き: {
+    'value': 'き',
+    'points': 1
+  },
+  く: {
+    'value': 'く',
+    'points': 1
+  },
+  け: {
+    'value': 'け',
+    'points': 1
+  },
+  こ: {
+    'value': 'こ',
+    'points': 1
+  },
+  さ: {
+    'value': 'さ',
+    'points': 1
+  },
+  し: {
+    'value': 'し',
+    'points': 1
+  },
+  す: {
+    'value': 'す',
+    'points': 1
+  },
+  せ: {
+    'value': 'せ',
+    'points': 1
+  },
+  そ: {
+    'value': 'そ',
+    'points': 1
+  },
+  た: {
+    'value': 'た',
+    'points': 1
+  },
+  ち: {
+    'value': 'ち',
+    'points': 1
+  },
+  つ: {
+    'value': 'つ',
+    'points': 1
+  },
+  て: {
+    'value': 'て',
+    'points': 1
+  },
+  と: {
+    'value': 'と',
+    'points': 1
+  },
+  な: {
+    'value': 'な',
+    'points': 1
+  },
+  に: {
+    'value': 'に',
+    'points': 1
+  },
+  ぬ: {
+    'value': 'ぬ',
+    'points': 1
+  },
+  ね: {
+    'value': 'ね',
+    'points': 1
+  },
+  の: {
+    'value': 'の',
+    'points': 1
+  },
+  は: {
+    'value': 'は',
+    'points': 1
+  },
+  ひ: {
+    'value': 'ひ',
+    'points': 1
+  },
+  ふ: {
+    'value': 'ふ',
+    'points': 1
+  },
+  へ: {
+    'value': 'へ',
+    'points': 1
+  },
+  ほ: {
+    'value': 'ほ',
+    'points': 1
+  },
+  ま: {
+    'value': 'ま',
+    'points': 1
+  },
+  み: {
+    'value': 'み',
+    'points': 1
+  },
+  む: {
+    'value': 'む',
+    'points': 1
+  },
+  め: {
+    'value': 'め',
+    'points': 1
+  },
+  も: {
+    'value': 'も',
+    'points': 1
+  },
+  や: {
+    'value': 'や',
+    'points': 1
+  },
+  ゆ: {
+    'value': 'ゆ',
+    'points': 1
+  },
+  よ: {
+    'value': 'よ',
+    'points': 1
+  },
+  ら: {
+    'value': 'ら',
+    'points': 1
+  },
+  り: {
+    'value': 'り',
+    'points': 1
+  },
+  る: {
+    'value': 'る',
+    'points': 1
+  },
+  れ: {
+    'value': 'れ',
+    'points': 1
+  },
+  ろ: {
+    'value': 'ろ',
+    'points': 1
+  },
+  わ: {
+    'value': 'わ',
+    'points': 1
+  },
+  を: {
+    'value': 'を',
+    'points': 1
+  },
+  ん: {
+    'value': 'ん',
+    'points': 1
+  }
+}
+
+
+
 export function getCardsLatters() {
   const cardsLatters = [] as GameCard[];
   
