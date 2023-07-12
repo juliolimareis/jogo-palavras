@@ -1,5 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  app: { head: { title: "Takopi" } },
+
   runtimeConfig: {
     public: {
       server_websocket: process.env.SERVER_WEBSOCKET,
@@ -19,12 +21,15 @@ export default defineNuxtConfig({
     { path: "~/components/icons", extensions: ["vue"] }
   ],
 
-  // build: {
-  //   extend(config, ctx) {
-  //     if (ctx.isDev) {
-  //       config.devtool = ctx.isClient ? "source-map" : "inline-source-map";
-  //     }
-  //   }
-  // }
+  imports: {
+    dirs: [
+      // Scan top-level modules
+      "composables",
+      // ... or scan modules nested one level deep with a specific name and file extension
+      "composables/*/index.{ts,js,mjs,mts}",
+      // ... or scan all modules within given directory
+      "composables/**"
+    ]
+  },
 
 });

@@ -1,5 +1,5 @@
-import DictionaryBr from "~~/game/dictionary-br.json";
-import DictionaryEn from "~~/game/dictionary-en.json";
+import DictionaryBr from "~~/composables/game/dictionary-br.json";
+import DictionaryEn from "~~/composables/game/dictionary-en.json";
 
 export default defineEventHandler(async event => {
   const word = decodeURIComponent(event.context.params.word);

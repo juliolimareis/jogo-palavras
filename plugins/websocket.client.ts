@@ -19,12 +19,12 @@ export default defineNuxtPlugin(() => {
 
   const getIdUser = () => {
     const idUser = localStorage?.idUser ?? uuid();
-    
-    localStorage.setItem("idUser", idUser)
-  
+
+    localStorage.setItem("idUser", idUser);
+
     return idUser;
   };
-  
+
   const getName = () => {
     let userName = localStorage?.userName;
 
@@ -32,11 +32,11 @@ export default defineNuxtPlugin(() => {
       localStorage.setItem("userName", "sem nome");
       userName = "sem nome";
     }
-  
+
     return userName;
   };
 
-  return { 
+  return {
     provide: {
       socket,
       idRoom,

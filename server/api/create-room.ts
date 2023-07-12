@@ -1,6 +1,6 @@
 import { v4 as uuid, } from "uuid";
 import { checkBody, } from "../core/validation";
-import { getRoomPlayer, } from "~~/game/player";
+import { getRoomPlayer, } from "~~/composables/game/player";
 
 export default defineEventHandler(async (event) => {
   return checkBody(await readBody<RoomData>(event)).then(body => {

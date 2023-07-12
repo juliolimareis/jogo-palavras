@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { sumWordPoints } from '~~/game';
+import { sumWordPoints } from '~~/composables/game';
 
 export function addPlayerInRoom({ idRoom, idUser, name = "", }: PlayerData, ws: WebSocket): boolean {
   const room = getRoom(idRoom);

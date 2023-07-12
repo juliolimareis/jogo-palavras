@@ -33,7 +33,7 @@
         :render="'?'"
       />
     </div>
-    
+
     <div v-else-if="card.value === 'Ç'">
       <div class="ml-[3px] mt-[-20px]">
         <Latter
@@ -52,7 +52,7 @@
         />
       </div>
     </div>
-    
+
     <div v-else class="ml-1 mt-[-10px]">
       <Latter
         :size="latterSize"
@@ -84,12 +84,12 @@
 </template>
 
 <script lang="ts" setup>
-import { specialDic, Vowels } from "../game/cards";
 
 const props = defineProps<{
   card: GameCard,
   isSelected?: boolean,
   color?: string,
+  acc?:string
 }>();
 
 const accSize = ref("25");

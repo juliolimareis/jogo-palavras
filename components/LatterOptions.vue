@@ -12,7 +12,6 @@
 </template>
 
 <script lang="ts" setup>
-import { specialLatters, special } from '~~/game/cards';
 
 const options = ref<string[]>([]);
 
@@ -31,12 +30,11 @@ onMounted(() => {
   if(props.card){
     if(props.card?.isJoker){
       options.value = ["A", "B", "C", "Ç", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Z", "Y", "W",
-        ...specialLatters
-      ];
+        ...specialLatters];
     }else{
       options.value = special;
     }
   }
 });
 
-</script>
+</script>~~/composables/game/cards

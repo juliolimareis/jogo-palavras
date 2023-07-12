@@ -1,4 +1,4 @@
-import { getRoom, } from "~~/game/player";
+import { getRoom, } from "~~/composables/game/player";
 
 export default defineEventHandler<CheckRoomResponse>(event => {
   const idRoom = event.context.params.idRoom;

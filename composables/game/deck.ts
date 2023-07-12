@@ -1,8 +1,8 @@
-import { Vowels, Cards, getCardsLatters } from './cards';
+import { Vowels, Cards, getCardsLatters, } from "./cards";
 
 export function getTableCards(deck: GameCard[]){
   const table = [];
-  
+
   for (let i = 0; i < deck.length && table.length !== 4; i++) {
     if(deck[i].value !== "ATK" && deck[i].value !== "?"){
       table.push(deck[i]);
@@ -10,32 +10,26 @@ export function getTableCards(deck: GameCard[]){
     }
   }
 
-  return {
-    table, deck
-  }
+  return { table, deck };
 }
 
 export function getNextCard(deck: GameCard[]){
   const card = deck[0];
-  
+
   deck.shift();
-  
-  return {
-    card, deck
-  }
+
+  return { card, deck };
 }
 
 export function getHand(deck: GameCard[]){
   const hand = [];
-  
+
   for(let i in Array.from(Array(7))){
     hand.push(deck[0]);
     deck.shift();
   }
 
-  return {
-    hand, deck
-  }
+  return { hand, deck };
 }
 
 export function getCardShield(deckSize: number) {
@@ -50,29 +44,19 @@ export function getCardShield(deckSize: number) {
 }
 
 export function getDeckProfile(maxPlayers: number){
-  let config = {
-    atk: 14, consonants: 3, joker: 13, vowels: 7
-  }
+  let config = { atk: 14, consonants: 3, joker: 13, vowels: 7 };
 
   if(maxPlayers >= 2 && maxPlayers <= 4){
-    config = {
-      atk: 14, consonants: 3, joker: 13, vowels: 7
-    }
+    config = { atk: 14, consonants: 3, joker: 13, vowels: 7 };
   }
   else if(maxPlayers > 4 && maxPlayers <= 6){
-    config = {
-      atk: 19, consonants: 4, joker: 18, vowels: 9
-    }
+    config = { atk: 19, consonants: 4, joker: 18, vowels: 9 };
   }
   else if(maxPlayers > 6 && maxPlayers <= 8){
-    config = {
-      atk: 23, consonants: 5, joker: 22, vowels: 10
-    }
+    config = { atk: 23, consonants: 5, joker: 22, vowels: 10 };
   }
   else{
-    config = {
-      atk: 27, consonants: 6, joker: 26, vowels: 13
-    }
+    config = { atk: 27, consonants: 6, joker: 26, vowels: 13 };
   }
 
   return createDeck(config);
@@ -91,21 +75,21 @@ export function createDeck({ vowels, consonants, joker, atk }: DeckConfig){
   for(let i in Array.from(Array(consonants))){
     Object.keys(Cards).forEach(k => {
       if(!Vowels.includes(k) && k !== "?" && k !== "ATK"){
-        deck.push(getCardCopy(k))
+        deck.push(getCardCopy(k));
       }
     });
   }
 
   for(let i in Array.from(Array(joker))){
-   deck.push(getCardCopy("?"));
+    deck.push(getCardCopy("?"));
   }
-  
+
   for(let i in Array.from(Array(atk))){
     deck.push(getCardCopy("ATK"));
   }
 
   // add ids
-  deck.forEach((c, i) => { c.id = i });
+  deck.forEach((c, i) => { c.id = i; });
 
   return shuffle<GameCard>(deck);
 }
@@ -113,10 +97,10 @@ export function createDeck({ vowels, consonants, joker, atk }: DeckConfig){
 export function shuffle<T = any>(arr: Array<T>){
   return arr.map(v => ({ v, sort: Math.random() }))
     .sort((a, b) => a.sort - b.sort)
-    .map(({ v }) => v)
+    .map(({ v }) => v);
 }
 
-interface DeckConfig { 
+interface DeckConfig {
   vowels: number;
   consonants: number;
   joker: number;

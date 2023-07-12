@@ -11,24 +11,12 @@
     <div class="topleft text-white" />
 
     <div class="middle">
-      <h1 class="font-bold">
-        COMING SOON
-      </h1>
-
-      <hr>
-
       <p
         class="font-bold text-3xl"
       >
-        {{ countDown }}
+        Takopi
       </p>
 
-      <Button
-        class="m-3"
-        @click="useRouter().push('/chat')"
-      >
-        Chat
-      </Button>
       <Button
         class="m-3 bg-green-500"
         @click="useRouter().push('/home')"
