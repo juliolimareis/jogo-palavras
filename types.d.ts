@@ -1,4 +1,4 @@
-import { WebSocket } from 'ws';
+import { WebSocket, } from "ws";
 
 declare global {
   // dados que o cliente envia
@@ -27,9 +27,10 @@ declare global {
     handCards: GameCard[];
     tableCards: GameCard[];
     results: Result[];
-    profilePlayersRoom: ServerDataPlayerInRoom[]
+    profilePlayersRoom: ServerDataPlayerInRoom[];
+    type: Room["type"];
+    roundTimeout: number;
   }
-
 
   interface ServerDataSerName {
     name: string;
@@ -42,12 +43,12 @@ declare global {
   }
 
   interface RoomData {
-    id: string;  
+    id: string;
     idAdmin: string;
     maxPlayers: number;
     maxRounds: number;
     roundTimeout: number;
-    difficulty: "0" | "1" | "2";
+    type: "pt" | "en" | "jp"
   }
 
   interface Room extends RoomData {
@@ -60,20 +61,22 @@ declare global {
     endGame?: boolean;
     jumpRound?: boolean;
     prepareToRemoval?: boolean;
+    type: "pt" | "en" | "jp"
   }
 
   interface PlayerRoom {
     id: string;
     ws: WebSocket,
-    image?: string;
     name?: string;
-    cardsShields: GameCard[];
+    image?: string;
+    cards?: GameCard[];
+    specialCards?: GameCard[];
     handCards: GameCard[];
     isReady: boolean;
     totalScore?: number;
     /*
-    Apenas para saber se o jogador está online na tela do jogo. 
-    Isso não se aplica na tela da sala, pois neste caso o jogador é removido da sala quando fica offline. 
+    Apenas para saber se o jogador está online na tela do jogo.
+    Isso não se aplica na tela da sala, pois neste caso o jogador é removido da sala quando fica offline.
     */
     isOnline?: boolean;
     confirmRound?: boolean;
@@ -100,7 +103,9 @@ declare global {
     isSelected?: boolean;
     jokerValue?: string;
     isJoker?: boolean;
-    acc?: "´" | "^" | "~" | ""
+    acc?: string;
+    sp?: string[];
+    finalValue?: string;
   }
 
   interface CheckRoomResponse {
@@ -113,10 +118,11 @@ declare global {
     maxRounds?: number;
     maxPlayers?: number;
     roundTimeout?: number;
+    type: Room["type"]
   }
 
   interface CreateRoomResponse {
-    body: { idRoom: string, message: string } 
+    body: { idRoom: string, message: string }
   }
 
   type MessageStatus = "disconnected" |"process-round" | "round-score" | "start" | "loading" | "offline" | "timeout" | "not-found" | "not-ready";

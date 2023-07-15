@@ -12,7 +12,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr 
+        <tr
           v-for="totalScore, i in getTotalScorePlayers(results, handCardsPerPlayer)"
           :key="i"
           :class="`border-2 ${$idUser === totalScore.idPlayer ? 'border-primary' : ''} bg-white dark:bg-gray-800`"
@@ -26,13 +26,13 @@
     </table>
   </div>
 
-  <div 
+  <div
     v-for="rounds, i in Object.values(results)"
     :key="i"
     class="ml-[-20px]"
   >
     <h1 class="text-center text-primary mb-3 mt-3 text-2xl">Resultados da Rodada {{ i + 1 }}</h1>
-    
+
     <table class="w-screen text-sm text-left text-gray-500 dark:text-gray-400 m-5">
       <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
         <tr>
@@ -43,7 +43,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr 
+        <tr
           v-for="result, i in rounds.sort((a, b) => { if (a.score > b.score) return -1; else if (a.score < b.score) return 1; return 0; })"
           :key="i"
           :class="`border-2 ${$idUser === result.idPlayer ? 'border-primary' : ''} bg-white dark:bg-gray-800 `"
@@ -68,8 +68,6 @@
 </template>
 
 <script lang="ts" setup>
-import { vowelsSpecialDic } from '~~/game/cards';
-import { getTotalScorePlayers } from '~~/game/player';
 
 const { $idUser } = useNuxtApp();
 
@@ -85,6 +83,7 @@ function getWord(cards: GameCard[]){
   // {{ w?.acc ? vowelsSpecialDic[w.value][w.acc] ?? "" : w.jokerValue ?? w.value }}
   return cards.map(card => {
     if(card.acc){
+      //@ts-ignore
       return vowelsSpecialDic[card.value][card.acc];
     }
 
