@@ -49,7 +49,7 @@
 
     <div v-if="status === 'start'" class="-border-2 border-gray-500 row-span-1">
       <div class="text-2xl font-bold text-center text-primary">
-        Takopi - {{ $userName }} {{ `(${Object.keys(results ?? {}).length + 1}° rodada de ${maxRounds})`}}
+        Takopi ({{ gameType === "pt" ? "Português": "English" }}) - {{ $userName }} {{ `(${Object.keys(results ?? {}).length + 1}° rodada de ${maxRounds})`}}
       </div>
 
       <div class="text-mg font-bold text-center">
@@ -140,6 +140,7 @@ const isWordValid = ref(false);
 const isAdmin = ref(false);
 const isLoaderCheckWord = ref(false);
 const errorMessageCheckWord = ref("");
+const gameType = ref<Room["type"]>("pt");
 
 const results = ref<Record<string, Result[]>>({});
 const isGameOver = ref(false);
@@ -234,6 +235,7 @@ onMounted(async () => {
       isAttack.value = handCards.value.some(c => c.value === "ATK");
       results.value = identTotalScore(res.data.results);
       isWordValid.value = false;
+      gameType.value = res.data.type;
       roundTimeout.value = res.data.roundTimeout * 60;
       break;
     case "result-round":
@@ -430,7 +432,7 @@ async function onCheckWord(){
   }).join("").toLocaleLowerCase();
 
   if(word.trim()){
-    await checkWord(word)
+    await checkWord(word, gameType.value)
       .then(res => {
         isWordValid.value = !!(res?.isValid);
       })
