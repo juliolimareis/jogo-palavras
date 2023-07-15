@@ -1,4 +1,4 @@
-# Takopi
+# Takopi 🇧🇷 🇺🇸 🇯🇵
 
 <a target="_blank" href="https://nuxt.com/">![Nuxt JS](https://img.shields.io/badge/NuxtJs-v3.6.3-3fb27f)</a>
 <a target="_blank" href="https://tailwindcss.com/">
@@ -11,6 +11,13 @@
 
 ## Intro
 Bem-vindo ao projeto do Jogo de Cartas de Montar Palavras **Takopi!** Este é um jogo empolgante que desafia os jogadores a criar palavras a partir de um conjunto de cartas embaralhadas. O jogo foi desenvolvido usando o framework Nuxt.js, que permite a criação de aplicativos web rápidos e escaláveis.
+
+Idiomas configuráveis: 
+- Português🇧🇷
+- Inglês 🇺🇸
+- Japonês 🇯🇵 
+
+<br />
 
 <img src="assets/images/readme/game-pt.jpg"/>
 
