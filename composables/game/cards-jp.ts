@@ -1,39 +1,6 @@
 type DeckCard = Record<string, GameCard>;
 
-export const jpLittle: GameCard["value"][] = ["や", "ゆ", "よ"];
-// export const specialLatters = ["Á", "Â", "Ã", "Í", "Ú", "Ê", "É", "Ó", "Ô", "Õ"];
-// export const specialDic = { "Á": "´", "Â": "^", "Ã": "~", "Í": "´", "Ú": "´", "Ê": "^", "É": "´", "Ó": "´", "Ô": "^", "Õ": "~" };
-// // export const vowelsSpecialDic = {"A": ["Á", "Â", "Ã", "A"], "I": ["Í"], "U": ["Ú", "U"], "E": ["É", "Ê", "E"], "O": ["Ó", "Ô", "Õ", "O"]};
-// export const vowelsSpecialDic = {
-//   "A": {
-//     "´": "Á",
-//     "^": "Â",
-//     "~": "Ã"
-//   },
-//   "E": {
-//     "´": "É",
-//     "^": "Ê",
-//     "~": "Ẽ"
-//   },
-//   "I": {
-//     "´": "Í",
-//     "^": "Î",
-//     "~": "ĩ"
-//   },
-//   "O": {
-//     "´": "Ó",
-//     "^": "Ô",
-//     "~": "Õ"
-//   },
-//   "U": {
-//     "´": "Ú",
-//     "^": "Û",
-//     "~": "Ũ"
-//   },
-// };
-// export const special = ["´", "^", "~"];
-
-export const hiraganaCards: DeckCard = {
+export const JpCards: DeckCard = {
   A:{
     value: "あ",
     points: 1,
@@ -122,7 +89,7 @@ export const hiraganaCards: DeckCard = {
   TSU:{
     value: "つ",
     points: 2,
-    sp: ["づ", "ツ", "ヅ"]
+    sp: ["づ", "っ", "ツ", "ッ", "ヅ"]
   },
   TE:{
     value: "て",
@@ -275,29 +242,30 @@ export const hiraganaCards: DeckCard = {
   },
 };
 
-// export function getCardsLatters() {
-//   const cardsLatters = [] as GameCard[];
+export function getJpCardsLatters() {
+  const cardsLatters = [] as GameCard[];
 
-//   Object.keys(Cards).map(k => {
-//     if(Cards[k].value !== "ATK" && Cards[k].value !== "?"){
-//       cardsLatters.push({ ...Cards[k] });
-//     }
-//   });
+  Object.keys(JpCards).map(k => {
+    if(JpCards[k].value !== "ATK" && JpCards[k].value !== "?"){
+      cardsLatters.push({ ...JpCards[k] });
+    }
+  });
 
-//   return cardsLatters;
-// }
+  return cardsLatters;
+}
 
-// export function showWord(cards: GameCard[]){
-//   let word = "";
+export function jpShowWord(cards: GameCard[]){
+  let word = "";
 
-//   cards.forEach(c => {
-//     if(c.jokerValue){
-//       word += c.jokerValue;
-//     }else if(c.acc){
-//       // @ts-ignore
-//       word += vowelsSpecialDic[c.value][c.acc];
-//     }
-//   });
+  cards.forEach(c => {
+    if(c.jokerValue){
+      word += c.jokerValue;
+    }else if(c.finalValue){
+      word += c.finalValue;
+    }else{
+      word += c.value;
+    }
+  });
 
-//   return word;
-// }
+  return word;
+}

@@ -4,10 +4,10 @@
     :isOpen="modalOptionCard"
     :onClose="closeModalOptionCard"
   >
-    <template v-slot:title>Valor do Curinga</template>
+    <template v-slot:title>Agregar novo valor</template>
 
     <template v-slot:body>
-      <LatterOptions :onSelect="setOptionLatter" :card="selectedCard"/>
+      <JpLatterOptions :onSelect="setOptionLatter" :card="selectedCard"/>
     </template>
   </Modal>
 
@@ -49,7 +49,7 @@
 
     <div v-if="status === 'start'" class="-border-2 border-gray-500 row-span-1">
       <div class="text-2xl font-bold text-center text-primary">
-        Takopi - {{ $userName }} {{ `(${Object.keys(results ?? {}).length + 1}° rodada de ${maxRounds})`}}
+        Takopi (日本語) - {{ $userName }} {{ `(${Object.keys(results ?? {}).length + 1}° rodada de ${maxRounds})`}}
       </div>
 
       <div class="text-mg font-bold text-center">
@@ -57,28 +57,28 @@
       </div>
 
       <div class="mx-auto -border-2 border-gray-400 w-[350px] h-[130px] mt-1">
-        <Card v-for="(c, i) in tableCards" :key="i"
+        <JpCard v-for="(c, i) in tableCards" :key="i"
           :class="`relative float-left m-2 ${c.isSelected ? 'shadow-md shadow-gray-500' : ''}`"
           :card="c"
           @click="upsertWork(c)"
           @dblclick="handleCardOption(c)"
         />
-        <!-- <Card
-          :class="`relative float-left m-2`"
-          :card="cardTest"
-        /> -->
       </div>
+    </div>
+
+    <div>
+      <Timer v-if="status === 'start' && timerInit" class="ml-2" :TIME_LIMIT="timerInit" :TIME_PASSED="timePassed"/>
     </div>
 
     <div v-if="status === 'start'" class="">
 
       <div class="m-auto text-center mt-4">
         <span>
-          <span class="float-left ml-3 text-2xl font-bold">{{ timeout }}</span>
+          <!-- <span class="float-left ml-3 text-2xl font-bold">{{ timeout }}</span> -->
           <b>
             <span
               :class="`${wordColor}`"
-              v-for="w in selectedCards" >{{ w?.acc ? vowelsSpecialDic[w.value][w.acc] ?? "" : w.jokerValue ?? w.value }}
+              v-for="w in selectedCards" >{{ w?.finalValue ? w?.finalValue : w.jokerValue ?? w.value }}
             </span>
             <span> {{ sumSelectCards() }}</span>
           </b>&nbsp;&nbsp;
@@ -91,7 +91,7 @@
       <div
         class="-border-2 border-gray-200 max-w-[800px] h-[250px] overflow-auto m-auto mt-3"
       >
-        <Card v-for="(c, i) in handCards" :key="i"
+        <JpCard v-for="(c, i) in handCards" :key="i"
           :class="`float-left m-1 mx-4 ${c.isSelected ? 'shadow-md shadow-gray-500' : ''}`"
           :card="c"
           @click="upsertWork(c)"
@@ -100,7 +100,7 @@
       </div>
 
       <div class="flex justify-between p-3">
-        <Button class="" @click="onCheckWord" :disabled="confirmRound || isLoaderCheckWord || selectedCards.length < 2">{{isLoaderCheckWord ? 'Verificando' : 'Verificar Palavra'}}</Button>
+        <Button class="" @click="onCheckWord" :disabled="confirmRound || isLoaderCheckWord || selectedCards.length < 2">{{isLoaderCheckWord ? 'Verificando...' : 'Verificar Palavra'}}</Button>
         <Button class="" @click="status = 'round-score'">Rank</Button>
         <Button class="bg-yellow-500" @click="onConfirmRound">{{ confirmRound ? 'Não terminei!' : 'Finalizar' }}</Button>
         <Button class="bg-red-400 float-right" :disabled="isLoaderCheckWord || confirmRound" @click="resetWord" >Apagar</Button>
@@ -112,13 +112,14 @@
 
 <script lang="ts" setup>
 
-// const cardTest = ref<GameCard>({value: "Ç", points: 0});
-
 const router = useRouter();
 const { $socket, $idRoom, $idUser, $userName } = useNuxtApp();
 
 const status = ref<MessageStatus>("loading");
 const timeout = ref("-");
+const timerInit = ref(0);
+const roundTimeout = ref(0);
+const timePassed = ref(0);
 
 const handCards = ref<GameCard[]>([]);
 const tableCards = ref<GameCard[]>([]);
@@ -175,10 +176,17 @@ onMounted(async () => {
 
     switch (res.channel) {
     case "round-timeout":
+      if(!timerInit.value){
+        timePassed.value = roundTimeout.value - res.data.timeout;
+        timerInit.value = roundTimeout.value;
+      }
+
       timeout.value = String(res.data.timeout);
 
       if(res.data.timeout <= 0){
         let data = { cards: selectedCards.value };
+
+        timerInit.value = 0;
 
         status.value = "round-score";
 
@@ -220,6 +228,7 @@ onMounted(async () => {
       isAttack.value = handCards.value.some(c => c.value === "ATK");
       results.value = identTotalScore(res.data.results);
       isWordValid.value = false;
+      roundTimeout.value = res.data.roundTimeout * 60;
       break;
     case "result-round":
       closeModalOptionCard();
@@ -281,15 +290,13 @@ function onConfirmRound() {
 function handleCardOption(card: GameCard) {
   if(confirmRound.value) return;
 
-  if(Vowels.includes(card.value)) {
-    wordColor.value = "";
-    selectedCard.value = card;
-    modalOptionCard.value = true;
-    selectedCard.value.isSelected = true;
+  wordColor.value = "";
+  selectedCard.value = card;
+  modalOptionCard.value = true;
+  selectedCard.value.isSelected = true;
 
-    if(!selectedCards.value.some(c => c.id === card.id)){
-      selectedCards.value.push(card);
-    }
+  if(!selectedCards.value.some(c => c.id === card.id)){
+    selectedCards.value.push(card);
   }
 }
 
@@ -343,10 +350,12 @@ function setOptionLatter(latter: string){
   if(selectedCard.value){
     if(selectedCard.value?.isJoker){
       selectedCard.value.jokerValue = latter;
-    }else if(special.includes(latter)){
-      selectedCard.value.acc = latter as GameCard["acc"];
-    }else{
-      (selectedCard.value as GameCard).acc = undefined;
+    }else {
+      if(selectedCard.value.finalValue){
+        selectedCard.value.finalValue = undefined;
+      }else{
+        selectedCard.value.finalValue = latter;
+      }
     }
   }
 
@@ -406,6 +415,8 @@ async function onCheckWord(){
     if(c.value !== "ATK"){
       if(c.value === "?"){
         return c?.jokerValue ?? "";
+      }else if(c.finalValue){
+        return c.finalValue;
       }
 
       return c.value;
@@ -415,7 +426,7 @@ async function onCheckWord(){
   }).join("").toLocaleLowerCase();
 
   if(word.trim()){
-    await checkWord(word)
+    await checkWord(word, "jp")
       .then(res => {
         isWordValid.value = !!(res?.isValid);
       })

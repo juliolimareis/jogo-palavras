@@ -1,4 +1,3 @@
-//room-test = b675b85c-407e-493f-a8da-9c9c222164d8
 export const checkRoom = (idRoom: string) => (
   fetch(`/api/check-room/${idRoom}`, { method: "GET" })
     .then<CheckRoomResponse>(res => res.json())
@@ -16,7 +15,7 @@ export const createRoom = (roomData: RoomData) => (
   }).then<CreateRoomResponse>(res => res.json())
 );
 
-export const checkWord = (word: string, lang?: "pt" | "en") => (
+export const checkWord = (word: string, lang?: Room["type"]) => (
   fetch(`/api/check-word/${word}?${new URLSearchParams({ lang: lang ?? "pt" })}`, { method: "GET" })
     .then(res => res.json())
 );

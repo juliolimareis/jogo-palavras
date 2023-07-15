@@ -15,7 +15,7 @@
     <div v-else-if="checkRoomStatus === 'room-start'">
       <div class="text-center mt-3">
         <span class="font-bold">Link da sala: </span>
-        
+
         <span class="font-bold text-primary">
           <input
             id="linkRoom"
@@ -25,14 +25,14 @@
             :value="url"
           />
         </span>
-        
+
         <Button
           :class="`ml-2 ${isClipboard ? 'bg-green-600' : ''}`"
           @click="clipboardUrl"
         >
           {{ isClipboard ? "Copiado" : "Copiar" }}
         </Button>
-  
+
         <div class="mt-5">
           <span class="font-bold">Nickname: </span>
           <span>
@@ -51,23 +51,24 @@
                 Editar
               </Button>
           </span>
-        </div> 
+        </div>
       </div>
-  
+
       <div class="grid grid-cols-1 gap-4 m-auto mt-4">
         <div class="m-auto w-full">
           <Chat :chatMessage="chatMessage"/>
         </div>
-  
+
         <div class="text-center">
           <span>
             Máximo de jogadores: <b>{{ dataRoom?.maxPlayers }}</b>
             | Rodadas: <b>{{ dataRoom?.maxRounds }}</b>
             | Tempo da Rodada: <b>{{ dataRoom?.roundTimeout }} {{ (dataRoom?.roundTimeout ?? 0) > 1 ? 'minutos' : 'minuto' }}</b>
+            | Idioma: <b>{{ getIdiomaName() }}</b>
             | Online: <b>{{ players.length }}</b>
           </span>
         </div>
-  
+
         <div v-if="status" class="border-2 rounded-md border-gray-400 w-full h-56 overflow-y-auto">
           <span v-for="p in players" :key="p.id">
             <Profile
@@ -85,15 +86,15 @@
             />
           </span>
         </div>
-  
+
         <div v-else class="text-red-500 text-center font-bold text-lg">
           Você está offline :(
         </div>
       </div>
-  
+
       <div class="w-auto text-center mt-10">
         <template v-if="isAdmin">
-          <Button 
+          <Button
             class="bg-green-600"
             @click="gameStart"
             :disabled="!isReady && players.filter((p) => p.isReady).length < 1"
@@ -101,7 +102,7 @@
             Iniciar
           </Button>
         </template>
-  
+
         <template v-else>
           <Button v-if="isReady" @click="setReady(false)" class="bg-orange-600">
             Não Estou Pronto!
@@ -110,22 +111,21 @@
             Estou Pronto!
           </Button>
         </template>
-  
+
         <div class="mt-4">
           <Button @click="giveUp" class="bg-orange-500">
             Abandonar
           </Button>
         </div>
-      </div> 
+      </div>
     </div>
 
   </div>
 </template>
 
 <script lang="ts" setup>
-import { checkRoom } from '~~/core/repository';
 
-const { $socket, $idUser, $userName, } = useNuxtApp();
+const { $socket, $idUser, $userName } = useNuxtApp();
 const router = useRouter();
 const route = useRoute();
 
@@ -155,13 +155,19 @@ onMounted(async () => {
     dataRoom.value = checkRoomResponse;
 
     if(checkRoomResponse?.gameReady){
-      router.replace(`/game/${checkRoomResponse.idRoom}`);
+      if(checkRoomResponse.type === "jp"){
+        router.replace(`/game/jp/${checkRoomResponse.idRoom}`);
+      }else{
+        router.replace(`/game/${checkRoomResponse.idRoom}`);
+      }
+
       return;
     }else if(checkRoomResponse?.roomIsFull){
       checkRoomStatus.value = "room-full";
+
       return;
     }
-    
+
     checkRoomStatus.value = "room-start";
 
     idAdmin.value = checkRoomResponse?.idAdmin;
@@ -171,6 +177,7 @@ onMounted(async () => {
     }
   }else{
     checkRoomStatus.value = "room-not-exist";
+
     return;
   }
 
@@ -201,116 +208,128 @@ onMounted(async () => {
     const res = JSON.parse(data) as ServerData;
 
     switch (res.channel) {
-      case "players-in-room":
-        if(Array.isArray(res.data)){
-          status.value = true;
+    case "players-in-room":
+      if(Array.isArray(res.data)){
+        status.value = true;
 
-          const admin = res.data.find(p => p.id === idAdmin.value);
+        const admin = res.data.find(p => p.id === idAdmin.value);
 
-          if(admin){
-            players.value = [admin].concat(res.data.filter(p => p.id !== idAdmin.value));
-          }else{
-            players.value = res.data;
-          }
+        if(admin){
+          players.value = [admin].concat(res.data.filter(p => p.id !== idAdmin.value));
+        }else{
+          players.value = res.data;
         }
-        break;
-      case "chat-message":
-        if(!chatMessage.value){
-            chatMessage.value += `${res.data.message}`;
-          }else{
-            chatMessage.value += `\n${res.data.message}`;
-          }
-        break;
-      case "game-start":
-        if(res.data?.path){
+      }
+      break;
+    case "chat-message":
+      if(!chatMessage.value){
+        chatMessage.value += `${res.data.message}`;
+      }else{
+        chatMessage.value += `\n${res.data.message}`;
+      }
+      break;
+    case "game-start":
+      if(res.data?.path){
+        if(res.data.type === "jp"){
+          router.replace(`/game/jp/${res.data.path}`);
+        }else{
           router.replace(`/game/${res.data.path}`);
         }
-        break;
-      default:
-        break;
+      }
+      break;
+    default:
+      break;
     }
   };
 
   $socket.onclose = () => {
     status.value = false;
   };
-  
+
   $socket.onerror = (err) => console.log(err);
 });
+
+function getIdiomaName(){
+  if(dataRoom.value?.type === "pt"){
+    return "Português";
+  }else if(dataRoom.value?.type === "en"){
+    return "English";
+  }else if(dataRoom.value?.type === "jp"){
+    return "日本語";
+  }
+
+  return "-";
+}
 
 function setName(){
   if(name.value.trim()){
     localStorage.userName = name.value;
-    
+
     $socket.send(
-        JSON.stringify({
-          channel: "set-name",
-          data: {
-            name: name.value 
-          }
-        } as PlayerData<ServerDataSerName>
+      JSON.stringify({
+        channel: "set-name",
+        data: { name: name.value }
+      } as PlayerData<ServerDataSerName>
       )
     );
-    
+
     editName.value = false;
   }
 }
 
 function setReady(_isReady: boolean){
-    isReady.value = _isReady;
+  isReady.value = _isReady;
 
-    $socket.send(
-        JSON.stringify({
-          channel: "set-ready",
-          data: {
-            isReady: isReady.value 
-          }
-        } as PlayerData
-      )
-    );   
+  $socket.send(
+    JSON.stringify({
+      channel: "set-ready",
+      data: { isReady: isReady.value }
+    } as PlayerData
+    )
+  );
 }
 
 function gameStart(){
-    $socket.send(
-        JSON.stringify({
-          channel: "game-start",
-          data: {}
-        }
-      )
-    );   
+  $socket.send(
+    JSON.stringify({
+      channel: "game-start",
+      data: {}
+    })
+  );
 }
 
 function clipboard(text: string) {
-    // navigator clipboard api needs a secure context (https)
-    if (navigator.clipboard && window.isSecureContext) {
-        // navigator clipboard api method'
-        return navigator.clipboard.writeText(text);
-    } else {
-        // text area method
-        let textArea = document.createElement("textarea");
-        textArea.value = text;
-        // make the textarea out of viewport
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
-        // textArea.style.display = "none";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
+  // navigator clipboard api needs a secure context (https)
+  if (navigator.clipboard && window.isSecureContext) {
+    // navigator clipboard api method'
+    return navigator.clipboard.writeText(text);
+  } else {
+    // text area method
+    let textArea = document.createElement("textarea");
 
-        return new Promise((res: any, rej: any) => {
-          // here the magic happens
-          document.execCommand('copy') ? res() : rej();
-          textArea.remove();
-        });
-    }
+    textArea.value = text;
+    // make the textarea out of viewport
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    // textArea.style.display = "none";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    return new Promise((res: any, rej: any) => {
+      // here the magic happens
+      document.execCommand("copy") ? res() : rej();
+      textArea.remove();
+    });
+  }
 }
 
 function giveUp() {
   $socket.send(
     JSON.stringify({
       channel: "give-up",
-      data: {}   
+      data: {}
     })
   );
 
