@@ -70,11 +70,15 @@
       </div>
     </div>
 
+    <div>
+      <Timer v-if="status === 'start' && timerInit" class="ml-2" :TIME_LIMIT="timerInit" :TIME_PASSED="timePassed"/>
+    </div>
+
     <div v-if="status === 'start'" class="">
 
-      <div class="m-auto text-center mt-4">
+      <div class="m-auto text-center">
         <span>
-          <span class="float-left ml-3 text-2xl font-bold">{{ timeout }}</span>
+          <!-- <span class="float-left ml-3 text-2xl font-bold">{{ timeout }}</span> -->
           <b>
             <span
               :class="`${wordColor}`"
@@ -119,6 +123,9 @@ const { $socket, $idRoom, $idUser, $userName } = useNuxtApp();
 
 const status = ref<MessageStatus>("loading");
 const timeout = ref("-");
+const timerInit = ref(0);
+const roundTimeout = ref(0);
+const timePassed = ref(0);
 
 const handCards = ref<GameCard[]>([]);
 const tableCards = ref<GameCard[]>([]);
@@ -175,10 +182,17 @@ onMounted(async () => {
 
     switch (res.channel) {
     case "round-timeout":
+      if(!timerInit.value){
+        timePassed.value = roundTimeout.value - res.data.timeout;
+        timerInit.value = roundTimeout.value;
+      }
+
       timeout.value = String(res.data.timeout);
 
       if(res.data.timeout <= 0){
         let data = { cards: selectedCards.value };
+
+        timerInit.value = 0;
 
         status.value = "round-score";
 
@@ -220,6 +234,7 @@ onMounted(async () => {
       isAttack.value = handCards.value.some(c => c.value === "ATK");
       results.value = identTotalScore(res.data.results);
       isWordValid.value = false;
+      roundTimeout.value = res.data.roundTimeout * 60;
       break;
     case "result-round":
       closeModalOptionCard();
