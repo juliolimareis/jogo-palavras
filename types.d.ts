@@ -27,7 +27,9 @@ declare global {
     handCards: GameCard[];
     tableCards: GameCard[];
     results: Result[];
-    profilePlayersRoom: ServerDataPlayerInRoom[]
+    profilePlayersRoom: ServerDataPlayerInRoom[];
+    type: Room["type"];
+    roundTimeout: number;
   }
 
   interface ServerDataSerName {
@@ -65,9 +67,10 @@ declare global {
   interface PlayerRoom {
     id: string;
     ws: WebSocket,
-    image?: string;
     name?: string;
-    cardsShields: GameCard[];
+    image?: string;
+    cards?: GameCard[];
+    specialCards?: GameCard[];
     handCards: GameCard[];
     isReady: boolean;
     totalScore?: number;
@@ -115,6 +118,7 @@ declare global {
     maxRounds?: number;
     maxPlayers?: number;
     roundTimeout?: number;
+    type: Room["type"]
   }
 
   interface CreateRoomResponse {
