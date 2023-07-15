@@ -91,4 +91,4 @@ function getWord(cards: GameCard[]){
   }).join("") || "-";
 }
 
-</script>~~/composables/game/cards~~/composables/game/player
+</script>
