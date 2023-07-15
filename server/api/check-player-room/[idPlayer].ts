@@ -1,4 +1,4 @@
-import { getRoomPlayer, } from "~~/composables/game/player";
+import { getRoomPlayer, } from "~~/server/utils/players";
 
 export default defineEventHandler(event => {
   const idPlayer = event.context.params.idPlayer;

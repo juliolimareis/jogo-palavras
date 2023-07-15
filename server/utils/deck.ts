@@ -1,4 +1,5 @@
-import { Vowels, Cards, getCardsLatters, } from "./cards";
+import { JpCards, getJpCardsLatters, } from "~~/composables/game/cards-jp";
+import { Vowels, Cards, getCardsLatters, } from "~~/composables/game/cards";
 
 export function getTableCards(deck: GameCard[]){
   const table = [];
@@ -32,8 +33,8 @@ export function getHand(deck: GameCard[]){
   return { hand, deck };
 }
 
-export function getCardShield(deckSize: number) {
-  const cardsLatters = getCardsLatters();
+export function getCardShield(deckSize: number, type: Room["type"]) {
+  let cardsLatters = type === "jp" ? getJpCardsLatters() : getCardsLatters();
   const shieldCard = cardsLatters[Math.floor(Math.random() * cardsLatters.length)];
 
   shieldCard.isShield = true;
@@ -41,6 +42,29 @@ export function getCardShield(deckSize: number) {
   shieldCard.points = 10;
 
   return shieldCard;
+}
+
+export function getJpDeckProfile(maxPlayers: number){
+  let atk = 14, joker = 13;
+
+  if(maxPlayers >= 2 && maxPlayers <= 4){
+    atk = 14;
+    joker = 13;
+  }
+  else if(maxPlayers > 4 && maxPlayers <= 6){
+    atk = 19;
+    joker = 18;
+  }
+  else if(maxPlayers > 6 && maxPlayers <= 8){
+    atk = 23;
+    joker = 22;
+  }
+  else{
+    atk = 27;
+    joker = 26;
+  }
+
+  return createJpDeck({ atk, joker, maxPlayers });
 }
 
 export function getDeckProfile(maxPlayers: number){
@@ -60,6 +84,29 @@ export function getDeckProfile(maxPlayers: number){
   }
 
   return createDeck(config);
+}
+
+export function createJpDeck({ joker, atk, maxPlayers }: JpDeckConfig){
+  let deck: GameCard[] = [];
+
+  const getCard = (value: string) => ({ ...JpCards[value] });
+
+  Array.from(Array((maxPlayers * 2) + 1)).forEach(() =>
+    deck = [...deck, ...getJpCardsLatters()]
+  );
+
+  Array.from(Array(joker)).forEach(() =>
+    deck.push(getCard("?"))
+  );
+
+  Array.from(Array(atk)).forEach(() =>
+    deck.push(getCard("ATK"))
+  );
+
+  // add ids
+  deck.forEach((c, i) => { c.id = i; });
+
+  return shuffle<GameCard>(deck);
 }
 
 /* deck básico: 3 vogais de cada, 2 consoantes, 4 atk, 4 coringas */
@@ -105,4 +152,10 @@ interface DeckConfig {
   consonants: number;
   joker: number;
   atk: number;
+}
+
+interface JpDeckConfig {
+  joker: number;
+  atk: number;
+  maxPlayers: number;
 }

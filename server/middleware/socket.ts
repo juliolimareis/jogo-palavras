@@ -1,6 +1,6 @@
 import WebSocket, { WebSocketServer, } from "ws";
-import { handleAttack, handleConfirmRound, restartGame, giveUpPlayer, startGame, } from "~~/composables/game";
-import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, getHandCardsPlayer, getHandCardsPlayers, getResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "~~/composables/game/player";
+import { handleAttack, handleConfirmRound, restartGame, giveUpPlayer, startGame, } from "../utils";
+import { addPlayerInRoom, addWordPlayerInResults, emit, emitAll, getHandCardsPlayer, getHandCardsPlayers, getResultsRoom, getRoom, getRoomPlayer, getServerDataPlayerInGame, getServerDataPlayerInRoom, isAdmin, removePlayer, setName, setReady, } from "../utils/players";
 declare global {
   var wss: WebSocketServer;
   var rooms: Room[];
@@ -52,7 +52,7 @@ setInterval(() => {
 export default defineEventHandler(() => {
   if (!global.wss) {
     // wss = new WebSocketServer({ server: event.node.res.socket?.server })
-    wss = new WebSocketServer({ port: Number(process.env.WEBSOCKET_PORT ?? 0) ?? 3007 });
+    wss = new WebSocketServer({ port: Number(process.env.WEBSOCKET_PORT) || 3007 });
 
     // console.log(`WEBSOCKET_PORT => ${process.env.WEBSOCKET_PORT}`);
     // console.log(`SERVER_WEBSOCKET => ${process.env.SERVER_WEBSOCKET}`);
@@ -172,7 +172,7 @@ export default defineEventHandler(() => {
                 idUser,
                   {
                     channel: "player-in-game",
-                    data: data
+                    data
                   } as ServerData<ServerDataPlayerInGame>
               );
             }else{
