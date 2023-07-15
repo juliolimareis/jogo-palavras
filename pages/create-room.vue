@@ -63,28 +63,31 @@
         >
       </div>
 
-      <!-- <div class="m-auto">
+      <div class="m-auto w-56">
         <label
           class="block mb-2 text-sm font-medium text-gray-900 -dark:text-primary"
-        >Nível de dificuldade</label>
+        >
+          Idioma
+        </label>
+
         <select
-          v-model="roomData.difficulty"
+          v-model="roomData.type"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 -dark:bg-gray-700 -dark:border-gray-600 -dark:placeholder-gray-400 -dark:text-white -dark:focus:ring-blue-500 -dark:focus:border-blue-500"
         >
           <option
             selected
-            value="0"
+            value="pt"
           >
-            Fácil
+            Português
           </option>
-          <option value="1">
-            Médio
+          <option value="en">
+            English
           </option>
-          <option value="2">
-            Difícil
+          <option value="jp">
+            日本語
           </option>
         </select>
-      </div> -->
+      </div>
     </div>
 
     <div class="w-auto text-center mt-10">
@@ -99,7 +102,6 @@
 </template>
 
 <script setup lang="ts">
-import { createRoom, checkPlayerRoom, } from "~~/core/repository";
 
 const { $idUser } = useNuxtApp();
 
@@ -111,9 +113,9 @@ const roomData = ref<RoomData>({
   id: "create",
   maxRounds: 3,
   maxPlayers: 2,
-  difficulty: "0",
   roundTimeout: 3,
-  idAdmin: $idUser
+  idAdmin: $idUser,
+  type: "pt"
 });
 
 onMounted(() => {
@@ -125,7 +127,7 @@ onMounted(() => {
 });
 
 function validate() {
-  const { maxRounds, maxPlayers, roundTimeout, } = roomData.value;
+  const { maxRounds, maxPlayers, roundTimeout } = roomData.value;
 
   errors.value = [];
 
@@ -154,7 +156,6 @@ function validate() {
   }
 
   return errors.value;
-
 }
 
 const onCreate = () => {

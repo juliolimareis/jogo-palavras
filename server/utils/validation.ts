@@ -11,7 +11,7 @@ export function checkBody<T = Record<string, any>>(body: T, checkValues?: string
           }else{
             if(typeof body[k as keyof T] === "string"){
               const str = body[k as keyof T] as string;
-  
+
               if(!str.trim()){
                 erros.push(`${k} is not valid`);
               }

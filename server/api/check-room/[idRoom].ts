@@ -1,6 +1,6 @@
-import { getRoom, } from "~~/game/player";
+import { getRoom, } from "~~/server/utils/players";
 
-export default defineEventHandler<CheckRoomResponse>(event => {
+export default defineEventHandler(event => {
   const idRoom = event.context.params.idRoom;
 
   if(idRoom){
@@ -16,12 +16,19 @@ export default defineEventHandler<CheckRoomResponse>(event => {
         maxRounds: room.maxRounds,
         roomIsFull: room.players.length >= room.maxPlayers,
         maxPlayers: room.maxPlayers,
-        roundTimeout: room.roundTimeout
-      };
+        roundTimeout: room.roundTimeout,
+        type: room.type
+      } as CheckRoomResponse;
     }
   }
 
-  event.node.res.statusCode = 404;
+  return createError({
+    statusCode: 404,
+    message: "room not found.",
+    data: { roomExists: false, roomIsFull: false }
+  });
 
-  return { message: "room not found.", roomExists: false, roomIsFull: false };
+  // event.node.res.statusCode = 404;
+
+  // return { message: "room not found.", roomExists: false, roomIsFull: false };
 });

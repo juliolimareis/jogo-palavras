@@ -8,7 +8,6 @@
       <Button @click="useRouter().push('/create-room')">
         Criar Sala
       </Button>
-      <Button>Entrar</Button>
       <Button>Como Jogar</Button>
     </div>
   </div>

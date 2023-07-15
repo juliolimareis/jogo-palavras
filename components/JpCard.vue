@@ -4,26 +4,8 @@
       {{ card.points }}
     </span>
 
-    <!-- Check if render special character -->
-    <div v-if="card?.acc && Vowels.includes(card.value)" class="relative z-10 ml-5 mt-[-20px]">
-      <Latter
-        :class="accClass"
-        :size="accSize"
-        :color="color"
-        :render="card.acc"
-      />
-    </div>
-
     <div v-if="card.value === 'ATK'" class="ml-[5px] mt-[-12px]">
       <BobIcon :size="55" />
-    </div>
-
-    <div v-else-if="card.value === 'J'" class="ml-[-10px] mt-[-22px]">
-      <Latter
-        :size="latterSize"
-        :color="color"
-        :render="card.value"
-      />
     </div>
 
     <div v-else-if="card.value === '?'" class="ml-[11px] mt-[-1px]">
@@ -34,31 +16,10 @@
       />
     </div>
 
-    <div v-else-if="card.value === 'Ç'">
-      <div class="ml-[3px] mt-[-20px]">
-        <Latter
-        class="z-10"
-        :size="'60'"
-        :color="color"
-        :render="'C'"
-        />
+    <div v-else class="ml-[10px] mt-[-22px]">
+      <div class="text-[48px] text-white font-bold">
+        {{ card.value }}
       </div>
-
-      <div class="relative z-9 left-[20px] top-[-22px]">
-        <Latter
-        :size="'30'"
-        :color="color"
-        :render="'S'"
-        />
-      </div>
-    </div>
-
-    <div v-else class="ml-1 mt-[-10px]">
-      <Latter
-        :size="latterSize"
-        :color="color"
-        :render="card.value"
-      />
     </div>
 
     <!-- Check if draw a shield -->

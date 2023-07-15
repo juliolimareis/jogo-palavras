@@ -1,5 +1,5 @@
-import DictionaryBr from "~~/game/dictionary-br.json";
-import DictionaryEn from "~~/game/dictionary-en.json";
+import DictionaryBr from "~~/server/utils/dictionary-br.json";
+import DictionaryEn from "~~/server/utils/dictionary-en.json";
 
 export default defineEventHandler(async event => {
   const word = decodeURIComponent(event.context.params.word);
@@ -8,13 +8,11 @@ export default defineEventHandler(async event => {
   let isValid = false;
 
   if(query.lang === "pt"){
-    if(DictionaryBr.includes(word)){
-      isValid = true;
-    }
+    isValid = DictionaryBr.includes(word);
   }else if(query.lang === "en"){
-    if(DictionaryEn.includes(word)){
-      isValid = true;
-    }
+    isValid = DictionaryEn.includes(word);
+  }else{
+    isValid = true;
   }
 
   return { isValid, word };

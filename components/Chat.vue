@@ -26,8 +26,6 @@
 </template>
 
 <script setup lang="ts">
-import { DataChat, PlayerData, } from "~~/types/types/types";
-
 defineProps({
   chatMessage: {
     defaultValue: "",
@@ -47,8 +45,8 @@ const sendMessage = () => {
         channel: "chat-message",
         data: { message: message.value.replace(/^\s*$/gm, "") },
       } as PlayerData<DataChat>
-    ));
-    message.value = ""
+      ));
+    message.value = "";
   }
 };
 

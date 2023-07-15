@@ -29,12 +29,17 @@ function handleSelect(latter: string) {
 onMounted(() => {
   if(props.card){
     if(props.card?.isJoker){
-      options.value = ["A", "B", "C", "Ç", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Z", "Y", "W",
-        ...specialLatters];
+      getJpCardsLatters().forEach(l => {
+        if(l.sp){
+          l.sp.forEach(s => {
+            options.value.push(s);
+          });
+        }
+      });
     }else{
-      options.value = special;
+      options.value = props.card.sp ?? [];
     }
   }
 });
 
-</script>~~/composables/game/cards
+</script>

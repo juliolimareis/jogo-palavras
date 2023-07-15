@@ -36,7 +36,7 @@
     <div>
       <Button class="mt-5 bg-green-600" @click="router.push(`/room/${$idRoom}`)">Entrar na sala.</Button>
     </div>
-    
+
   </div>
 
   <div v-else-if="status === 'loading'" class="mt-20 text-primary text-center font-bold text-lg">
@@ -44,7 +44,7 @@
   </div>
 
   <div v-if="status !== 'loading' && status !== 'start' && status !== 'round-score'" class="text-center mt-10">
-    <Button @click="router.push('/')"> 
+    <Button @click="router.push('/')">
       Home
     </Button>
   </div>
