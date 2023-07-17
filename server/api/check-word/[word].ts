@@ -1,5 +1,6 @@
 import DictionaryBr from "~~/server/utils/dictionary-br.json";
 import DictionaryEn from "~~/server/utils/dictionary-en.json";
+import DictionaryJp from "~~/server/utils/dictionary-jp.json";
 
 export default defineEventHandler(async event => {
   const word = decodeURIComponent(event.context.params.word);
@@ -12,7 +13,7 @@ export default defineEventHandler(async event => {
   }else if(query.lang === "en"){
     isValid = DictionaryEn.includes(word);
   }else{
-    isValid = true;
+    isValid = DictionaryJp.includes(word);
   }
 
   return { isValid, word };

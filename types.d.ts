@@ -1,4 +1,4 @@
-import { WebSocket, } from "ws";
+import { Socket, } from "socket.io";
 
 declare global {
   // dados que o cliente envia
@@ -66,7 +66,7 @@ declare global {
 
   interface PlayerRoom {
     id: string;
-    ws: WebSocket,
+    ws: Socket,
     name?: string;
     image?: string;
     cards?: GameCard[];
@@ -125,7 +125,7 @@ declare global {
     body: { idRoom: string, message: string }
   }
 
-  type MessageStatus = "disconnected" |"process-round" | "round-score" | "start" | "loading" | "offline" | "timeout" | "not-found" | "not-ready";
+  type MessageStatus = "disconnected" |"process-round" | "round-score" | "start" | "loading" | "offline" | "timeout" | "not-found" | "not-ready" | "player-not-found-in-room";
   interface TotalScorePlayer {
     playerName: string;
     totalScore: number;

@@ -97,8 +97,8 @@
           <Button
             class="bg-green-600"
             @click="gameStart"
-            :disabled="!isReady && players.filter((p) => p.isReady).length < 1"
-          >
+            >
+            <!-- :disabled="!isReady && players.filter((p) => p.isReady).length < 1" -->
             Iniciar
           </Button>
         </template>
@@ -125,7 +125,7 @@
 
 <script lang="ts" setup>
 
-const { $socket, $idUser, $userName } = useNuxtApp();
+const { $io, $idUser, $userName } = useNuxtApp();
 const router = useRouter();
 const route = useRoute();
 
@@ -149,66 +149,60 @@ const clipboardUrl = () => {
 
 onMounted(async () => {
   const idRoom = route.params.id as string;
-  const checkRoomResponse = await checkRoom(idRoom);
 
-  if(checkRoomResponse?.roomExists){
-    dataRoom.value = checkRoomResponse;
+  $io.emit("check-room", { idRoom });
 
-    if(checkRoomResponse?.gameReady){
-      if(checkRoomResponse.type === "jp"){
-        router.replace(`/game/jp/${checkRoomResponse.idRoom}`);
-      }else{
-        router.replace(`/game/${checkRoomResponse.idRoom}`);
+  $io.on("check-room", (res: any) => {
+    // console.log(res);
+
+    if(res?.roomExists){
+      dataRoom.value = res;
+
+      if(res?.gameReady){
+        if(res.type === "jp"){
+          router.replace(`/game/jp/${res.idRoom}`);
+        }else{
+          router.replace(`/game/${res.idRoom}`);
+        }
+
+        return;
       }
 
-      return;
-    }else if(checkRoomResponse?.roomIsFull){
-      checkRoomStatus.value = "room-full";
+      if(res?.roomIsFull){
+        checkRoomStatus.value = "room-full";
 
-      return;
+        return;
+      }else{
+        $io.emit("message", {
+          channel: "enter-room",
+          idUser: $idUser,
+          idRoom,
+          name: $userName,
+          data: {}
+        });
+      }
+
+      checkRoomStatus.value = "room-start";
+
+      idAdmin.value = res?.idAdmin;
+
+      if(res?.idAdmin === $idUser){
+        isAdmin.value = true;
+      }
+    }else{
+      checkRoomStatus.value = "room-not-exist";
     }
-
-    checkRoomStatus.value = "room-start";
-
-    idAdmin.value = checkRoomResponse?.idAdmin;
-
-    if(checkRoomResponse?.idAdmin === $idUser){
-      isAdmin.value = true;
-    }
-  }else{
-    checkRoomStatus.value = "room-not-exist";
-
-    return;
-  }
+  });
 
   url.value = document.URL;
   name.value = $userName;
 
-  // if(navigator?.userAgent.includes("Firefox")){
-  $socket.send(JSON.stringify({
-    channel: "enter-room",
-    idUser: $idUser,
-    idRoom,
-    name: $userName,
-    data: {}
-  }));
-  // }
-
-  // $socket.onopen = () => {
-  //   $socket.send(JSON.stringify({
-  //     channel: "enter-room",
-  //     idUser: $idUser,
-  //     idRoom,
-  //     name: $userName,
-  //     data: {}
-  //   }));
-  // }
-
-  $socket.onmessage = ({ data }) => {
-    const res = JSON.parse(data) as ServerData;
-
+  $io.on("message", (res: ServerData) => {
     switch (res.channel) {
     case "players-in-room":
+
+      console.log("players-in-room");
+
       if(Array.isArray(res.data)){
         status.value = true;
 
@@ -240,13 +234,11 @@ onMounted(async () => {
     default:
       break;
     }
-  };
+  });
 
-  $socket.onclose = () => {
+  $io.on("disconnect", () => {
     status.value = false;
-  };
-
-  $socket.onerror = (err) => console.log(err);
+  });
 });
 
 function getIdiomaName(){
@@ -265,12 +257,11 @@ function setName(){
   if(name.value.trim()){
     localStorage.userName = name.value;
 
-    $socket.send(
-      JSON.stringify({
+    $io.emit(
+      "message", {
         channel: "set-name",
         data: { name: name.value }
       } as PlayerData<ServerDataSerName>
-      )
     );
 
     editName.value = false;
@@ -280,22 +271,22 @@ function setName(){
 function setReady(_isReady: boolean){
   isReady.value = _isReady;
 
-  $socket.send(
-    JSON.stringify({
+  $io.emit(
+    "message",
+    {
       channel: "set-ready",
       data: { isReady: isReady.value }
     } as PlayerData
-    )
   );
 }
 
 function gameStart(){
-  $socket.send(
-    JSON.stringify({
+  $io.emit(
+    "message",
+    {
       channel: "game-start",
       data: {}
-    })
-  );
+    });
 }
 
 function clipboard(text: string) {
@@ -326,12 +317,11 @@ function clipboard(text: string) {
 }
 
 function giveUp() {
-  $socket.send(
-    JSON.stringify({
+  $io.send(
+    "message", {
       channel: "give-up",
       data: {}
-    })
-  );
+    });
 
   router.replace("/");
 }
