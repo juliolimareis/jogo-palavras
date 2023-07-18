@@ -103,7 +103,7 @@
 
 <script setup lang="ts">
 
-const { $idUser } = useNuxtApp();
+const { $io, $idUser } = useNuxtApp();
 
 const errors = ref<string[]>([]);
 
@@ -119,11 +119,19 @@ const roomData = ref<RoomData>({
 });
 
 onMounted(() => {
-  checkPlayerRoom($idUser).then(res => {
-    if(res?.isInRoom && res?.idRoom){
+  $io.on("create-room", (res: { idRoom: number, message: string, isCreated: boolean }) => {
+    if(res.isCreated){
+      window.location.replace(`/room/${res.idRoom}`);
+    }else{
       linkRoom.value = `/room/${res.idRoom}`;
     }
   });
+
+  // checkPlayerRoom($idUser).then(res => {
+  //   if(res?.isInRoom && res?.idRoom){
+  //     linkRoom.value = `/room/${res.idRoom}`;
+  //   }
+  // });
 });
 
 function validate() {
@@ -163,11 +171,13 @@ const onCreate = () => {
 
   isLoading.value = true;
 
-  createRoom(roomData.value).then((res) => {
-    if(res.body?.idRoom){
-      window.location.replace(`/room/${res.body.idRoom}`);
-    }
-  });
+  $io.emit("create-room", roomData.value);
+
+  // createRoom(roomData.value).then((res) => {
+  //   if(res.body?.idRoom){
+  //     window.location.replace(`/room/${res.body.idRoom}`);
+  //   }
+  // });
 };
 
 </script>

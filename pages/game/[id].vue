@@ -119,7 +119,9 @@
 // const cardTest = ref<GameCard>({value: "Ç", points: 0});
 
 const router = useRouter();
-const { $socket, $idRoom, $idUser, $userName } = useNuxtApp();
+const route = useRoute();
+
+const { $io, $idRoom, $idUser, $userName } = useNuxtApp();
 
 const status = ref<MessageStatus>("loading");
 const timeout = ref("-");
@@ -152,35 +154,35 @@ const confirmRound = ref(false);
 const maxRounds = ref(0);
 const handCardsPerPlayer = ref<HandCardsPerPlayer[]>([]);
 
+const idRoom = route.params.id as string;
+
 onMounted(async () => {
-  const checkRoomResponse = await checkRoom($idRoom);
+  $io.emit("check-room", { idRoom });
 
-  if(checkRoomResponse?.roomExists){
-    maxRounds.value = checkRoomResponse.maxRounds ?? 0;
+  $io.on("player-not-found-in-room", () => {
+    status.value = "player-not-found-in-room";
+  });
 
-    if(!checkRoomResponse?.gameReady){
-      status.value = "not-ready";
+  $io.on("check-room", (res: any) => {
+    if(res?.roomExists){
+      maxRounds.value = res.maxRounds ?? 0;
+
+      if(!res?.gameReady){
+        status.value = "not-ready";
+      }
+      if(res?.idAdmin === $idUser){
+        isAdmin.value = true;
+      }
+
+      sendEnterGame();
+    }else{
+      status.value = "not-found";
+
+      return;
     }
-    if(checkRoomResponse?.idAdmin === $idUser){
-      isAdmin.value = true;
-    }
-  }else{
-    status.value = "not-found";
+  });
 
-    return;
-  }
-
-  setTimeout(() => {
-    if(status.value === "loading") {
-      status.value = "timeout";
-    }
-  }, 5000);
-
-  sendEnterGame();
-
-  $socket.onmessage = ({ data }) => {
-    const res = JSON.parse(data) as ServerData;
-
+  $io.on("message", (res: ServerData) => {
     switch (res.channel) {
     case "round-timeout":
       if(!timerInit.value){
@@ -247,10 +249,10 @@ onMounted(async () => {
       break;
     case "next-round":
       // console.log("next-round");
-      $socket.send(JSON.stringify({
+      $io.emit("message", {
         channel: "enter-game",
         data: {}
-      }));
+      });
       break;
     case "end-game":
       // console.log("end-game");
@@ -274,25 +276,27 @@ onMounted(async () => {
     default:
       break;
     }
-  };
+  });
 
-  $socket.onclose = () => status.value = "disconnected";
+  $io.on("disconnect", () => {
+    status.value = "disconnected";
+  });
 });
 
 function sendWord(data: { cards: GameCard[] }){
-  $socket.send(JSON.stringify({
+  $io.emit("message", {
     channel: "finish-round",
     data
-  }));
+  });
 }
 
 function onConfirmRound() {
   confirmRound.value = !confirmRound.value;
 
-  $socket.send(JSON.stringify({
+  $io.emit("message", {
     channel: "confirm-round",
     data: { confirm: confirmRound.value }
-  }));
+  });
 }
 // TODO handleCardOption
 function handleCardOption(card: GameCard) {
@@ -316,13 +320,13 @@ function onRequestAttack(result: Result) {
 }
 
 function onAttack(selectedIds: number[]) {
-  $socket.send(JSON.stringify({
+  $io.emit("message", {
     channel: "attack",
     data: {
       result: selectedResultAttack.value,
       cardsIds: selectedIds
     }
-  }));
+  });
 
   closeModalAttack();
 }
@@ -338,20 +342,20 @@ const sumSelectCards = () => {
 };
 
 function sendEnterGame(){
-  $socket.send(JSON.stringify({
+  $io.emit("message", {
     channel: "enter-game",
     idUser: $idUser,
     idRoom: $idRoom,
     name: $userName,
     data: {}
-  }));
+  });
 }
 
 function sendGameRestart(){
-  $socket.send(JSON.stringify({
+  $io.emit("message", {
     channel: "game-restart",
     data: {}
-  }));
+  });
 }
 // TODO: setOptionLatter
 function setOptionLatter(latter: string){
@@ -453,12 +457,10 @@ async function onCheckWord(){
 }
 
 function giveUp() {
-  $socket.send(
-    JSON.stringify({
-      channel: "give-up",
-      data: {}
-    })
-  );
+  $io.emit("message", {
+    channel: "give-up",
+    data: {}
+  });
 
   router.replace("/");
 }
