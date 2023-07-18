@@ -409,7 +409,7 @@ export default function socketIO(io: SocketGame) {
       if(room.type === "jp"){
         room.deck = getJpDeckProfile(room.maxPlayers);
       }else{
-        room.deck = getDeckProfile(room.maxPlayers);
+        room.deck = getDeckProfile(room);
       }
 
       // distribui as cartas dos jogadores
@@ -1024,7 +1024,9 @@ export default function socketIO(io: SocketGame) {
     return createJpDeck({ atk, joker, maxPlayers });
   }
 
-  function getDeckProfile(maxPlayers: number){
+  function getDeckProfile(room: Room){
+    const { type, maxPlayers } = room;
+
     let config = { atk: 14, consonants: 3, joker: 13, vowels: 7 };
 
     if(maxPlayers >= 2 && maxPlayers <= 4){
@@ -1038,6 +1040,10 @@ export default function socketIO(io: SocketGame) {
     }
     else{
       config = { atk: 27, consonants: 6, joker: 26, vowels: 13 };
+    }
+
+    if(type === "en"){
+      return createDeckEn(config);
     }
 
     return createDeck(config);
@@ -1090,6 +1096,48 @@ export default function socketIO(io: SocketGame) {
 
     for(let i in Array.from(Array(atk))){
       deck.push(getCardCopy("ATK"));
+    }
+
+    // add ids
+    deck.forEach((c, i) => { c.id = i; });
+
+    return shuffle<GameCard>(deck);
+  }
+
+  /* deck básico: 3 vogais de cada, 2 consoantes, 4 atk, 4 coringas */
+  function createDeckEn({ vowels, consonants, joker, atk }: DeckConfig){
+    const deck: GameCard[] = [];
+
+    const getCard = (value: string) => ({ ...Cards[value] });
+
+    for(let i in Array.from(Array(vowels))){
+      Vowels.forEach(v => deck.push(getCard(v)));
+    }
+
+    for(let i in Array.from(Array(consonants))){
+      Object.keys(Cards).forEach(k => {
+        if(!Vowels.includes(k) && k !== "?" && k !== "ATK" && k !== "Ç"){
+          deck.push(getCard(k));
+        }
+      });
+
+      deck.push({
+        value: "K",
+        points: 3
+      });
+
+      deck.push({
+        value: "Y",
+        points: 3
+      });
+    }
+
+    for(let i in Array.from(Array(joker))){
+      deck.push(getCard("?"));
+    }
+
+    for(let i in Array.from(Array(atk))){
+      deck.push(getCard("ATK"));
     }
 
     // add ids
