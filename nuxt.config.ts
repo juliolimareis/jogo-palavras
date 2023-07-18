@@ -1,4 +1,5 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+import Game from "./game/index";
+
 export default defineNuxtConfig({
   app: { head: { title: "Takopi" } },
 
@@ -16,6 +17,8 @@ export default defineNuxtConfig({
 
   plugins: ["~/plugins/websocket.client.ts"],
 
+  modules: ["nuxt-internal-socket"],
+
   components: [
     { path: "~/components", extensions: ["vue"] },
     { path: "~/components/icons", extensions: ["vue"] }
@@ -30,6 +33,18 @@ export default defineNuxtConfig({
       // ... or scan all modules within given directory
       "composables/**"
     ]
+  },
+
+  socketIO: {
+    /** Required */
+    socketFunctions: Game,
+    /** Optional - these are the defaults
+     * managerOptions is of type ManagerOptions from the socket.io-client library
+     */
+    clientOptions: {
+      uri: "/", // If you want to connect to a different server than the one created by this plugin
+      managerOptions: {},
+    },
   },
 
 });

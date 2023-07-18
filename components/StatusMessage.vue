@@ -28,6 +28,17 @@
   </div>
 
   <div
+    v-else-if="status === 'player-not-found-in-room'"
+    class="mt-20 text-red-500 text-center font-bold text-lg"
+  >
+    Sala fechada.
+
+    <div>
+      <Button class="mt-5 bg-green-600" @click="router.push('create-room')">Criar Sala.</Button>
+    </div>
+  </div>
+
+  <div
     v-else-if="status === 'not-ready'"
     class="mt-20 text-primary text-center font-bold text-lg"
   >

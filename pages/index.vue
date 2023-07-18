@@ -12,11 +12,17 @@
         Takopi
       </Header>
 
-      <Button
+      <!-- <Button
         class="bg-green-500 w-full hover:bg-primary/90"
         @click="useRouter().push('/home')"
       >
         Game
+      </Button> -->
+      <Button
+        class="bg-green-500 w-full hover:bg-primary/90 mt-3"
+        @click="useRouter().push('/create-room')"
+      >
+        Criar Sala
       </Button>
 
       <div class="mt-5">
@@ -37,34 +43,18 @@
 </template>
 
 <script lang="ts" setup>
-// Set the date we're counting down to
-const countDownDate = new Date("Feb 28, 2023 15:37:25").getTime();
-const countDown = ref("35 days");
+// const { $io } = useNuxtApp();
 
-// Update the count down every 1 second
-const interval = setInterval(() => {
-  // Get todays date and time
-  const now = new Date().getTime();
+// const test = () => {
+//   console.log("Send message");
+//   $io.emit("event", { data: "hello" });
+// };
 
-  // Find the distance between now an the count down date
-  const distance = countDownDate - now;
-
-  // Time calculations for days, hours, minutes and seconds
-  const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-  // Display the result in an element with id="demo"
-  countDown.value = days + "d " + hours + "h "
-  + minutes + "m " + seconds + "s ";
-
-  // If the count down is finished, write some text
-  if (distance < 0) {
-    clearInterval(interval);
-    countDown.value = "EXPIRED";
-  }
-}, 1000);
+// onMounted(() => {
+//   $io.on("game", (data: any) => {
+//     console.log(data);
+//   });
+// });
 
 </script>
 

@@ -33,19 +33,19 @@ defineProps({
   }
 });
 
-const { $socket } = useNuxtApp();
+const { $io } = useNuxtApp();
 
 const message = ref("");
 
 const sendMessage = () => {
   if(message.value.trim()){
-    $socket.send(
-      JSON.stringify(
+    $io.emit(
+      "message",
       {
         channel: "chat-message",
         data: { message: message.value.replace(/^\s*$/gm, "") },
       } as PlayerData<DataChat>
-      ));
+    );
     message.value = "";
   }
 };
