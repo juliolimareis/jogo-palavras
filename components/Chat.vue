@@ -33,21 +33,21 @@ defineProps({
   }
 });
 
-const { $io } = useNuxtApp();
+// const { $io } = useNuxtApp();
 
-const message = ref("");
+// const message = ref("");
 
-const sendMessage = () => {
-  if(message.value.trim()){
-    $io.emit(
-      "message",
-      {
-        channel: "chat-message",
-        data: { message: message.value.replace(/^\s*$/gm, "") },
-      } as PlayerData<DataChat>
-    );
-    message.value = "";
-  }
-};
+// const sendMessage = () => {
+//   if(message.value.trim()){
+//     $io.emit(
+//       "message",
+//       {
+//         channel: "chat-message",
+//         data: { message: message.value.replace(/^\s*$/gm, "") },
+//       } as PlayerData<DataChat>
+//     );
+//     message.value = "";
+//   }
+// };
 
 </script>

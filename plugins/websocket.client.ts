@@ -1,7 +1,6 @@
-import { v4 as uuid, } from "uuid";
 
 export default defineNuxtPlugin(() => {
-  if (process.server) return;
+  if (import.meta.server) return;
 
   // const config = useRuntimeConfig();
 
@@ -10,7 +9,7 @@ export default defineNuxtPlugin(() => {
   const idRoom = route.params.id as string;
 
   const getIdUser = () => {
-    const idUser = localStorage?.idUser ?? uuid();
+    const idUser = localStorage?.idUser;
 
     localStorage.setItem("idUser", idUser);
 

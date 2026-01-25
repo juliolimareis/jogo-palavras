@@ -5,7 +5,7 @@ export function getTableCards(deck: GameCard[]){
   const table = [];
 
   for (let i = 0; i < deck.length && table.length !== 4; i++) {
-    if(deck[i].value !== "ATK" && deck[i].value !== "?"){
+    if(deck[i]?.value !== "ATK" && deck[i]?.value !== "?"){
       table.push(deck[i]);
       deck.splice(i, 1);
     }
@@ -25,7 +25,7 @@ export function getNextCard(deck: GameCard[]){
 export function getHand(deck: GameCard[]){
   const hand = [];
 
-  for(let i in Array.from(Array(7))){
+  for(const i in Array.from(Array(7))){
     hand.push(deck[0]);
     deck.shift();
   }
@@ -34,7 +34,7 @@ export function getHand(deck: GameCard[]){
 }
 
 export function getCardShield(deckSize: number, type: Room["type"]) {
-  let cardsLatters = type === "jp" ? getJpCardsLatters() : getCardsLatters();
+  const cardsLatters = type === "jp" ? getJpCardsLatters() : getCardsLatters();
   const shieldCard = cardsLatters[Math.floor(Math.random() * cardsLatters.length)];
 
   shieldCard.isShield = true;
@@ -115,11 +115,11 @@ export function createDeck({ vowels, consonants, joker, atk }: DeckConfig){
 
   const getCardCopy = (value: string) => ({ ...Cards[value] });
 
-  for(let i in Array.from(Array(vowels))){
+  for(const i in Array.from(Array(vowels))){
     Vowels.forEach(v => deck.push(getCardCopy(v)));
   }
 
-  for(let i in Array.from(Array(consonants))){
+  for(const i in Array.from(Array(consonants))){
     Object.keys(Cards).forEach(k => {
       if(!Vowels.includes(k) && k !== "?" && k !== "ATK"){
         deck.push(getCardCopy(k));
@@ -127,11 +127,11 @@ export function createDeck({ vowels, consonants, joker, atk }: DeckConfig){
     });
   }
 
-  for(let i in Array.from(Array(joker))){
+  for(const i in Array.from(Array(joker))){
     deck.push(getCardCopy("?"));
   }
 
-  for(let i in Array.from(Array(atk))){
+  for(const i in Array.from(Array(atk))){
     deck.push(getCardCopy("ATK"));
   }
 
