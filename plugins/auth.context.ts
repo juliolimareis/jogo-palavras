@@ -1,5 +1,5 @@
 import { type UserCredential, browserLocalPersistence, signInWithEmailAndPassword, } from "firebase/auth";
-import { useFirebase } from "~/composable/useFirebase";
+import { useFirebase } from "~/composables/useFirebase";
 
 export default defineNuxtPlugin(() => {
   const { auth } = useFirebase();

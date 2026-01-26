@@ -37,4 +37,4 @@ onMounted(() => {
   }
 });
 
-</script>~~/composables/game/cards
+</script>
