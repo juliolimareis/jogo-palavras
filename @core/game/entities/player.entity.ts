@@ -10,31 +10,43 @@ export type PlayerProps = EntityProps & {
   totalScore?: number;
   cards?: CardProps[];
   confirmRound?: boolean;
-  handCards?: CardProps[];
   specialCards?: CardProps[];
 }
 
 export default class Player extends Entity {
   private _cards: Card[];
-  private _handCards: Card[];
-  private _specialCards: Card[];
   
-  name: string;
-  imageUrl: string;
-  isReady: boolean;
-  isOnline: boolean;
-  confirmRound: boolean;
+  readonly name: string;
+  readonly imageUrl: string;
+  readonly isReady: boolean;
+  readonly isOnline: boolean;
+  readonly confirmRound: boolean;
 
   constructor(props?: PlayerProps){
     super(props);
+
     this.name = props?.name ?? "";
     this.imageUrl = props?.image ?? "";
-    this.isReady = props?.isReady ?? false;
-    this.isOnline = props?.isOnline ?? true;
-    this.confirmRound = props?.confirmRound ?? false;
+    this.isReady = !!(props?.isReady);
+    this.isOnline = !!(props?.isOnline);
+    this.confirmRound = !!(props?.confirmRound);
     this._cards = Array.isArray(props?.cards) ? props.cards.map(c => Card.create(c)): [];
-    this._handCards = Array.isArray(props?.handCards) ? props?.handCards.map(c => Card.create(c)): [];
-    this._specialCards = Array.isArray(props?.specialCards) ? props?.specialCards.map(c => Card.create(c)): [];
+  }
+
+  get cards(): Card[] {
+    return this._cards;
+  }
+
+  addCard(...cards: Card[]): void {
+    this._cards.push(...cards);
+  }
+
+  removeCard(card: Card): void {
+    const index = this._cards.findIndex(c => c.id === card.id);
+
+    if(index !== -1){
+      this._cards.splice(index, 1);
+    }
   }
 
   override toJson(): PlayerProps {
@@ -46,8 +58,6 @@ export default class Player extends Entity {
       isOnline: this.isOnline,
       confirmRound: this.confirmRound,
       cards: this._cards.map(c => c.toJson()), 
-      handCards: this._handCards.map(c => c.toJson()),
-      specialCards: this._specialCards.map(c => c.toJson()),
     };
   }
 

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-extraneous-class */
 import Card, { type CardProps } from "../entities/card.entity";
+import Deck, { DeckType } from "../entities/deck.entity";
 
 export default class CardFactory {
   static buildVowels(): Card[] {
@@ -191,5 +192,43 @@ export default class CardFactory {
       ...CardFactory.buildJaponeseVowels(),
       ...CardFactory.buildJaponeseConsonants(),
     ]
+  }
+
+  static createDeck(
+    vowels: number,
+    consonants: number,
+    joker: number,
+    atk: number,
+    type: DeckType
+  ): Deck {
+    const deck = Deck.create()
+
+    Array(vowels).forEach(() => {
+      if(type === DeckType.JP){
+        deck.addCard(...CardFactory.buildJaponeseVowels())
+      }else{
+        deck.addCard(...CardFactory.buildVowels())
+      }
+    });
+
+    Array(consonants).forEach(() => {
+      if (type === DeckType.JP) {
+        deck.addCard(...CardFactory.buildJaponeseConsonants());
+      } else {
+        deck.addCard(...CardFactory.buildConsonants());
+      }
+    });
+
+    Array(joker).forEach(() =>
+      deck.addCard(CardFactory.buildJoker())
+    );
+
+    Array(atk).forEach(() =>
+     deck.addCard(CardFactory.buildJoker())
+    );
+
+    deck.shuffle()
+
+    return deck;
   }
 }
