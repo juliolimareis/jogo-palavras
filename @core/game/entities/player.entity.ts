@@ -16,11 +16,12 @@ export type PlayerProps = EntityProps & {
 export default class Player extends Entity {
   private _cards: Card[];
   
-  readonly name: string;
-  readonly imageUrl: string;
-  readonly isReady: boolean;
-  readonly isOnline: boolean;
-  readonly confirmRound: boolean;
+  name: string;
+  imageUrl: string;
+  isReady: boolean;
+  isOnline: boolean;
+  confirmRound: boolean;
+  isDisabled: boolean;
 
   constructor(props?: PlayerProps){
     super(props);
@@ -30,11 +31,16 @@ export default class Player extends Entity {
     this.isReady = !!(props?.isReady);
     this.isOnline = !!(props?.isOnline);
     this.confirmRound = !!(props?.confirmRound);
+    this.isDisabled = false;
     this._cards = Array.isArray(props?.cards) ? props.cards.map(c => Card.create(c)): [];
   }
 
   get cards(): Card[] {
     return this._cards;
+  }
+
+  get haveShield(): boolean {
+    return this._cards.some(c => c.isShield);
   }
 
   addCard(...cards: Card[]): void {

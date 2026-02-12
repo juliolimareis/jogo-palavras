@@ -8,6 +8,7 @@ import CardFactory from "../factories/card.factory";
 import type { ResultProps } from "./result.entity";
 import type { PlayerProps } from "./player.entity";
 import type { CardProps } from "./card.entity";
+import DictionaryFactory from "../factories/dictionary.factory";
 
 const MAX_TABLE_CARDS = 4;
 const TIME_TO_NEXT_ROUND = 12; 
@@ -26,7 +27,7 @@ export type GameAggregateRootProps = EntityProps & {
   roundTimeout: number;
   type: DeckType;
   round: number;
-  results: ResultProps[];
+  results: ResultProps[][];
   players: PlayerProps[];
   deck: DeckProps;
   tableCards?: CardProps[];
@@ -42,7 +43,7 @@ export default class GameAggregateRoot extends Entity {
   private roundTimeout: number;
   private type: DeckType;
   private round: number;
-  private results: Result[];
+  private results: Result[][];
   private players: Player[];
   private deck: Deck;
   private tableCards: Card[];
@@ -58,8 +59,8 @@ export default class GameAggregateRoot extends Entity {
     this.maxRounds = props.maxRounds;
     this.roundTimeout = props.roundTimeout;
     this.type = props.type;
-    this.round = props.round;
-    this.results = props.results.map(r => Result.create(r));
+    this.round = props.round ?? 1;
+    this.results = Array.isArray(props.results) ? props.results.map(r => r.map(r => Result.create(r))) : [];
     this.players = props.players.map(p => Player.create(p));
     this.deck = Deck.create(props.deck);
     this.tableCards = props?.tableCards?.map(c => Card.create(c)) ?? [];
@@ -84,6 +85,58 @@ export default class GameAggregateRoot extends Entity {
     });
 
     this.tableCards = this.drawCard(MAX_TABLE_CARDS);
+
+    this.results.push([]);
+
+  }
+
+  startNextRound(){
+    if(this.status === GameStatus.RESULT){
+      if(this.round === this.maxRounds){
+        this.status = GameStatus.FINISHED;
+  
+        return;
+      }
+  
+      this.round++;
+      this.jumpRound = false;
+      this.tableCards = this.drawCard(MAX_TABLE_CARDS);
+  
+      this.players.forEach((player) => {
+        if(!player.haveShield){
+          player.addCard(this.generateRandomShield());
+        }
+  
+        player.confirmRound = false
+        player.addCard(...this.drawCard(1));
+      });
+    }
+  }
+
+  addPlayer(player: Player){
+    if(this.status === GameStatus.PREPARATION){
+      this.players.push(player);
+    }
+  }
+
+  removePlayer(player: Player){
+    const index = this.players.findIndex(p => p.id === player.id);
+
+    if(index !== -1){
+      this.players.splice(index, 1);
+    }
+  }
+
+  addResult(result: Result){
+    if(this.status === GameStatus.GAMING){
+      if(Array.isArray(this.results[this.round]) && !this.results[this.round]?.some(r => r.id === result.player.id)){
+        this.results?.[this.round]?.push(result);
+      }
+    }
+  }
+
+  checkWord(word: string){
+    return DictionaryFactory.build(this.type).includes(word)
   }
 
   private generateRandomShield(){
@@ -166,7 +219,7 @@ export default class GameAggregateRoot extends Entity {
       roundTimeout: this.roundTimeout,
       type: this.type,
       round: this.round,
-      results: this.results.map(r => r.toJson()),
+      results: this.results.map(r => r.map(r => r.toJson())),
       players: this.players.map(p => p.toJson()),
       deck: this.deck.toJson(),
       tableCards: this.tableCards.map(c => c.toJson()),

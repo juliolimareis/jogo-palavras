@@ -1,9 +1,9 @@
 export type ID = string;
 
 export type EntityProps = {
-  id: ID | null | undefined;
-  createdAt: Date | null | undefined;
-  updatedAt: Date | null | undefined;
+  id?: ID | null;
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
 }
 
 export default abstract class Entity {
