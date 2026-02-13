@@ -71,7 +71,7 @@ export default class Player extends Entity {
     return JSON.stringify(this.toJson(), null, 2);
   }
 
-  static create(command: PlayerProps){
+  static override create(command: PlayerProps){
     return new Player(command);
   }
 

@@ -201,31 +201,31 @@ export default class CardFactory {
     atk: number,
     type: DeckType
   ): Deck {
-    const deck = Deck.create()
+    const deck = Deck.create();
 
-    Array(vowels).forEach(() => {
+    for (let i = 0; i < vowels; i++) {
       if(type === DeckType.JP){
         deck.addCard(...CardFactory.buildJaponeseVowels())
       }else{
         deck.addCard(...CardFactory.buildVowels())
       }
-    });
+    }
 
-    Array(consonants).forEach(() => {
+    for (let i = 0; i < consonants; i++) {
       if (type === DeckType.JP) {
         deck.addCard(...CardFactory.buildJaponeseConsonants());
       } else {
         deck.addCard(...CardFactory.buildConsonants());
       }
-    });
+    };
 
-    Array(joker).forEach(() =>
+    for (let i = 0; i < joker; i++) {
       deck.addCard(CardFactory.buildJoker())
-    );
+    };
 
-    Array(atk).forEach(() =>
+    for (let i = 0; i < atk; i++) {
      deck.addCard(CardFactory.buildJoker())
-    );
+    };
 
     deck.shuffle()
 

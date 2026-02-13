@@ -90,7 +90,7 @@ export default class Card extends Entity {
     return JSON.stringify(this.toJson(), null, 2);
   }
 
-  static create(command: CardProps){
+  static override create(command: CardProps){
     return new Card(command);
   }
 }

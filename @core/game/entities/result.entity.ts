@@ -48,7 +48,7 @@ export default class Result extends Entity {
     };
   }
 
-  static create(command: ResultProps){
+  static override create(command: ResultProps){
     return new Result(command);
   }
 }

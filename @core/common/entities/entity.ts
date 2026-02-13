@@ -1,45 +1,53 @@
-export type ID = string;
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import Parse from "~/@core/game/factories/Parse.factory";
+
+export type EntityId = string;
 
 export type EntityProps = {
-  id?: ID | null;
-  createdAt?: Date | null;
-  updatedAt?: Date | null;
+  id?: EntityId | null;
+  updatedAt?: Date | null | string | any;
+  createdAt?: Date | null | string | any;
 }
 
 export default abstract class Entity {
-  id: ID;
-  createdAt: Date;
-  updatedAt?: Date | null;
+  readonly id: string;
 
-  constructor(props?: EntityProps){
-    this.id = props?.id ?? "";
+  readonly createdAt: Date;
 
-    if(props?.createdAt){
-      this.createdAt = props.createdAt;
-    }
+  private _updatedAt: Date;
 
-    if(props?.updatedAt){
-      this.updatedAt = props.updatedAt;
-    }else{
-      this.updatedAt = null;
-    }
-
-    this.createdAt = new Date();
-    this.updatedAt = new Date();
+  constructor(props?: EntityProps) {
+    this.id = Parse.stringEmpty(props?.id);
+    this.createdAt = Parse.toDate(props?.createdAt) ?? new Date();
+    this._updatedAt = Parse.toDate(props?.updatedAt) ?? this.createdAt;
   }
 
-  toJson(){
-    const json = {
+  get updatedAt(): Date {
+    return this._updatedAt;
+  }
+
+  touch(): void {
+    this._updatedAt = new Date();
+  }
+
+  toJson(): EntityProps {
+    return {
+      id: this.id,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
-    } as EntityProps;
-
-    if(this.id){
-      json.id = this.id;
     }
+  };
 
-    return json;
+  static create(props?: EntityProps): any {
+    throw new EntityError("Method not implemented.");
   }
-
-  abstract toString(): string;
 }
+
+export class EntityError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "EntityError";
+  }
+}
+

@@ -61,7 +61,7 @@ export default class Deck extends Entity {
     return JSON.stringify(this.toJson(), null, 2);
   }
 
-  static create(command?: DeckProps){
+  static override create(command?: DeckProps){
     return new Deck(command);
   }
 }

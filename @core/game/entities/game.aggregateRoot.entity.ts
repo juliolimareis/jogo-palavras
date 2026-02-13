@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Entity, { type EntityProps } from "~/@core/common/entities/entity";
 import { DeckType, type DeckProps } from "./deck.entity";
 import Player from "./player.entity";
@@ -9,15 +10,16 @@ import type { ResultProps } from "./result.entity";
 import type { PlayerProps } from "./player.entity";
 import type { CardProps } from "./card.entity";
 import DictionaryFactory from "../factories/dictionary.factory";
+import Parse from "../factories/Parse.factory";
 
 const MAX_TABLE_CARDS = 4;
 const TIME_TO_NEXT_ROUND = 12; 
 
 export enum GameStatus {
-  PREPARATION,
-  GAMING,
-  RESULT,
-  FINISHED
+  PREPARATION = "PREPARATION",
+  GAMING = "GAMING",
+  RESULT = "RESULT",
+  FINISHED = "FINISHED"
 }
 
 export type GameAggregateRootProps = EntityProps & {
@@ -34,6 +36,7 @@ export type GameAggregateRootProps = EntityProps & {
   status?: GameStatus;
   jumpRound?: boolean;
   timeNextRound?: number;
+  timeRound?: Date | string | any;
 }
 
 export default class GameAggregateRoot extends Entity {
@@ -50,6 +53,7 @@ export default class GameAggregateRoot extends Entity {
   private status?: GameStatus;
   private jumpRound: boolean;
   private timeNextRound: number;
+  private _timeRound: Date;
 
   constructor(props: GameAggregateRootProps){
     super(props);
@@ -67,6 +71,7 @@ export default class GameAggregateRoot extends Entity {
     this.status = props.status ?? GameStatus.PREPARATION;
     this.jumpRound = !!(props.jumpRound);
     this.timeNextRound = props.timeNextRound ?? TIME_TO_NEXT_ROUND;
+    this._timeRound = Parse.toDate(props.timeRound) ?? new Date(); 
   }
 
   startGame(){
@@ -85,13 +90,11 @@ export default class GameAggregateRoot extends Entity {
     });
 
     this.tableCards = this.drawCard(MAX_TABLE_CARDS);
-
-    this.results.push([]);
-
+    this.touchTimeRound();
   }
 
   startNextRound(){
-    if(this.status === GameStatus.RESULT){
+    if(this.status === GameStatus.GAMING || this.status === GameStatus.RESULT){
       if(this.round === this.maxRounds){
         this.status = GameStatus.FINISHED;
   
@@ -100,6 +103,7 @@ export default class GameAggregateRoot extends Entity {
   
       this.round++;
       this.jumpRound = false;
+      this.status = GameStatus.GAMING;
       this.tableCards = this.drawCard(MAX_TABLE_CARDS);
   
       this.players.forEach((player) => {
@@ -111,6 +115,8 @@ export default class GameAggregateRoot extends Entity {
         player.addCard(...this.drawCard(1));
       });
     }
+
+    this.touchTimeRound();
   }
 
   addPlayer(player: Player){
@@ -137,6 +143,14 @@ export default class GameAggregateRoot extends Entity {
 
   checkWord(word: string){
     return DictionaryFactory.build(this.type).includes(word)
+  }
+
+  get timeRound(): Date {
+    return this._timeRound;
+  }
+
+  private touchTimeRound(){
+    this._timeRound = new Date();
   }
 
   private generateRandomShield(){
@@ -231,6 +245,10 @@ export default class GameAggregateRoot extends Entity {
 
   override toString(): string {
     return JSON.stringify(this.toJson(), null, 2);
+  }
+
+  static override create(command: GameAggregateRootProps) {
+    return new GameAggregateRoot(command)
   }
   
 }
