@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Entity, { type EntityProps } from "~/@core/common/entities/entity";
+import Entity, { type EntityProps } from "../../common/entities/entity";
 import { DeckType, type DeckProps } from "./deck.entity";
 import Player from "./player.entity";
 import Result from "./result.entity";
@@ -9,8 +9,8 @@ import CardFactory from "../factories/card.factory";
 import type { ResultProps } from "./result.entity";
 import type { PlayerProps } from "./player.entity";
 import type { CardProps } from "./card.entity";
-import DictionaryFactory from "../factories/dictionary.factory";
-import Parse from "../factories/Parse.factory";
+import Parse from "../../common/factories/Parse.factory";
+import DictionaryDatabaseDriver from "../../common/infra/interfaces/dictionary.database.interface";
 
 const MAX_TABLE_CARDS = 4;
 const TIME_TO_NEXT_ROUND = 12; 
@@ -55,7 +55,10 @@ export default class GameAggregateRoot extends Entity {
   private timeNextRound: number;
   private _timeRound: Date;
 
-  constructor(props: GameAggregateRootProps){
+  constructor(
+    props: GameAggregateRootProps,
+    readonly dictionaryDatabase: DictionaryDatabaseDriver
+  ){
     super(props);
 
     this.playerAdmin = Player.create(props.playerAdmin);
@@ -68,10 +71,15 @@ export default class GameAggregateRoot extends Entity {
     this.players = props.players.map(p => Player.create(p));
     this.deck = Deck.create(props.deck);
     this.tableCards = props?.tableCards?.map(c => Card.create(c)) ?? [];
-    this.status = props.status ?? GameStatus.PREPARATION;
     this.jumpRound = !!(props.jumpRound);
     this.timeNextRound = props.timeNextRound ?? TIME_TO_NEXT_ROUND;
     this._timeRound = Parse.toDate(props.timeRound) ?? new Date(); 
+
+    if(this.isFinished){
+      this.status = GameStatus.FINISHED;
+    }else{
+      this.status = props.status ?? GameStatus.PREPARATION;
+    }
   }
 
   startGame(){
@@ -95,7 +103,7 @@ export default class GameAggregateRoot extends Entity {
 
   startNextRound(){
     if(this.status === GameStatus.GAMING || this.status === GameStatus.RESULT){
-      if(this.round === this.maxRounds){
+      if(this.isFinished){
         this.status = GameStatus.FINISHED;
   
         return;
@@ -141,8 +149,12 @@ export default class GameAggregateRoot extends Entity {
     }
   }
 
-  checkWord(word: string){
-    return DictionaryFactory.build(this.type).includes(word)
+  checkWord(word: string): boolean {
+    return this.dictionaryDatabase.checkWorld(word);
+  }
+
+  get isFinished(){
+    return this.round === this.maxRounds;
   }
 
   get timeRound(): Date {
@@ -247,8 +259,23 @@ export default class GameAggregateRoot extends Entity {
     return JSON.stringify(this.toJson(), null, 2);
   }
 
-  static override create(command: GameAggregateRootProps) {
-    return new GameAggregateRoot(command)
+  static override create(
+    command: GameAggregateRootProps & { dictionaryDatabase: DictionaryDatabaseDriver },
+  ) {
+    if(command.dictionaryDatabase instanceof DictionaryDatabaseDriver){
+      return new GameAggregateRoot(
+        command,
+        command.dictionaryDatabase
+      );
+    }
+    
+    throw new GameAggregateRootError("command.dictionaryDatabase must be DictionaryDatabaseDriverI");
   }
-  
+}
+
+export class GameAggregateRootError extends Error {
+  constructor(message: string){
+    super(`[GameAggregateRootError] ${message}`)
+    this.name = "GameAggregateRootError"
+  }
 }
