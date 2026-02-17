@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import Deck from './deck.entity'; 
-import Card from './card.entity';
+import Deck from '../deck.entity'; 
+import Card from '../card.entity';
 
 describe('Deck Entity', () => {
   

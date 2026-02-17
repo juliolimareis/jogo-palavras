@@ -4,7 +4,6 @@ import type { EntityProps } from "~/@core/common/entities/entity";
 import Entity from "~/@core/common/entities/entity";
 import Parse from "./Parse.factory";
 
-// Mock Entity para testes
 class MockEntity extends Entity {
   override toString(): string {
     return "Method not implemented.";
@@ -21,7 +20,7 @@ class MockEntity extends Entity {
     return { id: this.id, name: this.name };
   }
 
-  static create(props?: EntityProps & { name?: string }): MockEntity {
+  static override create(props?: EntityProps & { name?: string }): MockEntity {
     return new MockEntity(props);
   }
 }

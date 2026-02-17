@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import CardFactory from './card.factory'; // Ajuste o caminho
-import { DeckType } from '../entities/deck.entity';
+import CardFactory from '../card.factory';
+import { DeckType } from '../../entities/deck.entity';
 
 describe('CardFactory', () => {
 

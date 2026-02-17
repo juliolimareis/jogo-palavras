@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest';
-import Card from './card.entity';
+import Card from '../card.entity';
 
 describe('Card Entity', () => {
   

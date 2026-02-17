@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import Result, { ResultError } from './result.entity'; // Ajuste o caminho
-import Player from './player.entity';
-import Card, { type CardProps } from './card.entity';
+import Player from '../player.entity';
+import Result, { ResultError } from '../result.entity'; 
+import Card, { type CardProps } from '../card.entity';
 
 describe('Result Entity', () => {
   
