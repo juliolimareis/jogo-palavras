@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Parse from "~/@core/game/factories/Parse.factory";
+import Parse from "../factories/Parse.factory";
 
 export type EntityId = string;
 

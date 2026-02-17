@@ -1,6 +1,6 @@
 import Card, { type CardProps } from "./card.entity";
-import Entity from "~/@core/common/entities/entity";
-import type { EntityProps } from "~/@core/common/entities/entity";
+import Entity from "../../common/entities/entity";
+import type { EntityProps } from "../../common/entities/entity";
 
 export type PlayerProps = EntityProps & {
   name?: string;

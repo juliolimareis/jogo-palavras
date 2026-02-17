@@ -21,9 +21,9 @@ import {
 } from "firebase/firestore";
 
 
-import type { DatabaseDriverOptions } from "./database.adapter.interface";
-import type { EntityProps } from "~/@core/common/entities/entity";
-import type DatabaseAdapterI from "./database.adapter.interface";
+import type { EntityProps } from "../../../common/entities/entity";
+import type DatabaseDriverI from "../interfaces/database.driver.interface";
+import type { DatabaseDriverOptions } from "../interfaces/database.driver.interface";
 
 export type FilterCondition = {
   field: string;
@@ -53,7 +53,7 @@ export type FindOptions = DatabaseDriverOptions & {
 };
 
 export default class FirestoreDriver<T extends EntityProps>
-  implements DatabaseAdapterI<T>
+  implements DatabaseDriverI<T>
 {
   private batch;
   private _pendingOperations = 0;
@@ -245,8 +245,6 @@ export default class FirestoreDriver<T extends EntityProps>
   }
 
   async healthCheck(): Promise<void> {
-    // Client SDK não tem listCollections().
-    // Apenas tentamos uma leitura simples.
     await getDocs(query(this.ref, limit(1)));
   }
 }

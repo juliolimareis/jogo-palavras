@@ -1,4 +1,4 @@
-import Entity, { type EntityProps } from "~/@core/common/entities/entity";
+import Entity, { type EntityProps } from "../../common/entities/entity";
 import type { CardProps } from "./card.entity";
 import Card from "./card.entity";
 
