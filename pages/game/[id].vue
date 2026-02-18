@@ -1,24 +1,24 @@
 <template>
   <Modal
     class="m-auto"
-    :isOpen="modalOptionCard"
-    :onClose="closeModalOptionCard"
+    :is-open="modalOptionCard"
+    :on-close="closeModalOptionCard"
   >
-    <template v-slot:title>Valor do Curinga</template>
+    <template #title>Valor do Curinga</template>
 
-    <template v-slot:body>
-      <LatterOptions :onSelect="setOptionLatter" :card="selectedCard"/>
+    <template #body>
+      <LatterOptions :on-select="setOptionLatter" :card="selectedCard"/>
     </template>
   </Modal>
 
   <Modal
     class="m-auto"
-    :isOpen="modalAttack"
-    :onClose="closeModalAttack"
+    :is-open="modalAttack"
+    :on-close="closeModalAttack"
   >
-    <template v-slot:title>Selecionar Ataque</template>
+    <template #title>Selecionar Ataque</template>
 
-    <template v-slot:body>
+    <template #body>
       <AttackOptions :result="selectedResultAttack" :on-attack="onAttack" :amount-attacks="countAttacks()"/>
     </template>
   </Modal>
@@ -40,7 +40,7 @@
       <span>Preparando próximo turno ...</span>
     </div>
 
-    <Score :results="results" :isGameOver="isGameOver" :isAttack="isAttack" :on-attack="onRequestAttack" :hand-cards-per-player="handCardsPerPlayer"/>
+    <Score :results="results" :is-game-over="isGameOver" :is-attack="isAttack" :on-attack="onRequestAttack" :hand-cards-per-player="handCardsPerPlayer"/>
   </div>
 
   <div>
@@ -57,7 +57,8 @@
       </div>
 
       <div class="mx-auto -border-2 border-gray-400 w-[350px] h-[130px] mt-1">
-        <Card v-for="(c, i) in tableCards" :key="i"
+        <Card
+v-for="(c, i) in tableCards" :key="i"
           :class="`relative float-left m-2 ${c.isSelected ? 'shadow-md shadow-gray-500' : ''}`"
           :card="c"
           @click="upsertWork(c)"
@@ -81,8 +82,8 @@
           <!-- <span class="float-left ml-3 text-2xl font-bold">{{ timeout }}</span> -->
           <b>
             <span
-              :class="`${wordColor}`"
-              v-for="w in selectedCards" >{{ w?.acc ? vowelsSpecialDic[w.value][w.acc] ?? "" : w.jokerValue ?? w.value }}
+              v-for="w in selectedCards"
+              :class="`${wordColor}`" >{{ w?.acc ? vowelsSpecialDic[w.value][w.acc] ?? "" : w.jokerValue ?? w.value }}
             </span>
             <span> {{ sumSelectCards() }}</span>
           </b>&nbsp;&nbsp;
@@ -95,7 +96,8 @@
       <div
         class="-border-2 border-gray-200 max-w-[800px] h-[250px] overflow-auto m-auto mt-3"
       >
-        <Card v-for="(c, i) in handCards" :key="i"
+        <Card
+v-for="(c, i) in handCards" :key="i"
           :class="`float-left m-1 mx-4 ${c.isSelected ? 'shadow-md shadow-gray-500' : ''}`"
           :card="c"
           @click="upsertWork(c)"
@@ -104,7 +106,7 @@
       </div>
 
       <div class="flex justify-between p-3">
-        <Button class="" @click="onCheckWord" :disabled="confirmRound || isLoaderCheckWord || selectedCards.length < 2">{{isLoaderCheckWord ? 'Verificando' : 'Verificar Palavra'}}</Button>
+        <Button class="" :disabled="confirmRound || isLoaderCheckWord || selectedCards.length < 2" @click="onCheckWord">{{isLoaderCheckWord ? 'Verificando' : 'Verificar Palavra'}}</Button>
         <Button class="" @click="status = 'round-score'">Rank</Button>
         <Button class="bg-yellow-500" @click="onConfirmRound">{{ confirmRound ? 'Não terminei!' : 'Finalizar' }}</Button>
         <Button class="bg-red-400 float-right" :disabled="isLoaderCheckWord || confirmRound" @click="resetWord" >Apagar</Button>
@@ -121,7 +123,7 @@
 const router = useRouter();
 const route = useRoute();
 
-const { $io, $idRoom, $idUser, $userName } = useNuxtApp();
+const { /*$io,*/ $idRoom, $idUser, $userName } = useNuxtApp();
 
 const status = ref<MessageStatus>("loading");
 const timeout = ref("-");

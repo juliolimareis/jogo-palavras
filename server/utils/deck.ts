@@ -1,11 +1,12 @@
 import { JpCards, getJpCardsLatters, } from "~~/composables/game/cards-jp";
 import { Vowels, Cards, getCardsLatters, } from "~~/composables/game/cards";
 
+// aggregate
 export function getTableCards(deck: GameCard[]){
   const table = [];
 
   for (let i = 0; i < deck.length && table.length !== 4; i++) {
-    if(deck[i].value !== "ATK" && deck[i].value !== "?"){
+    if(deck[i]?.value !== "ATK" && deck[i]?.value !== "?"){
       table.push(deck[i]);
       deck.splice(i, 1);
     }
@@ -14,6 +15,7 @@ export function getTableCards(deck: GameCard[]){
   return { table, deck };
 }
 
+// deck
 export function getNextCard(deck: GameCard[]){
   const card = deck[0];
 
@@ -22,10 +24,11 @@ export function getNextCard(deck: GameCard[]){
   return { card, deck };
 }
 
+// aggregateRoot
 export function getHand(deck: GameCard[]){
   const hand = [];
 
-  for(let i in Array.from(Array(7))){
+  for(const i in Array.from(Array(7))){
     hand.push(deck[0]);
     deck.shift();
   }
@@ -33,8 +36,9 @@ export function getHand(deck: GameCard[]){
   return { hand, deck };
 }
 
+// Aggregate
 export function getCardShield(deckSize: number, type: Room["type"]) {
-  let cardsLatters = type === "jp" ? getJpCardsLatters() : getCardsLatters();
+  const cardsLatters = type === "jp" ? getJpCardsLatters() : getCardsLatters();
   const shieldCard = cardsLatters[Math.floor(Math.random() * cardsLatters.length)];
 
   shieldCard.isShield = true;
@@ -44,6 +48,7 @@ export function getCardShield(deckSize: number, type: Room["type"]) {
   return shieldCard;
 }
 
+// DeckConfig
 export function getJpDeckProfile(maxPlayers: number){
   let atk = 14, joker = 13;
 
@@ -67,6 +72,7 @@ export function getJpDeckProfile(maxPlayers: number){
   return createJpDeck({ atk, joker, maxPlayers });
 }
 
+// DeckConfig
 export function getDeckProfile(maxPlayers: number){
   let config = { atk: 14, consonants: 3, joker: 13, vowels: 7 };
 
@@ -86,6 +92,7 @@ export function getDeckProfile(maxPlayers: number){
   return createDeck(config);
 }
 
+// factory
 export function createJpDeck({ joker, atk, maxPlayers }: JpDeckConfig){
   let deck: GameCard[] = [];
 
@@ -109,30 +116,31 @@ export function createJpDeck({ joker, atk, maxPlayers }: JpDeckConfig){
   return shuffle<GameCard>(deck);
 }
 
+// factory
 /* deck básico: 3 vogais de cada, 2 consoantes, 4 atk, 4 coringas */
 export function createDeck({ vowels, consonants, joker, atk }: DeckConfig){
   const deck: GameCard[] = [];
 
-  const getCardCopy = (value: string) => ({ ...Cards[value] });
+  const getCard = (value: string) => ({ ...Cards[value] });
 
-  for(let i in Array.from(Array(vowels))){
-    Vowels.forEach(v => deck.push(getCardCopy(v)));
+  for(const i in Array.from(Array(vowels))){
+    Vowels.forEach(v => deck.push(getCard(v)));
   }
 
-  for(let i in Array.from(Array(consonants))){
+  for(const i in Array.from(Array(consonants))){
     Object.keys(Cards).forEach(k => {
       if(!Vowels.includes(k) && k !== "?" && k !== "ATK"){
-        deck.push(getCardCopy(k));
+        deck.push(getCard(k));
       }
     });
   }
 
-  for(let i in Array.from(Array(joker))){
-    deck.push(getCardCopy("?"));
+  for(const i in Array.from(Array(joker))){
+    deck.push(getCard("?"));
   }
 
-  for(let i in Array.from(Array(atk))){
-    deck.push(getCardCopy("ATK"));
+  for(const i in Array.from(Array(atk))){
+    deck.push(getCard("ATK"));
   }
 
   // add ids
@@ -141,6 +149,7 @@ export function createDeck({ vowels, consonants, joker, atk }: DeckConfig){
   return shuffle<GameCard>(deck);
 }
 
+// Deck
 export function shuffle<T = any>(arr: Array<T>){
   return arr.map(v => ({ v, sort: Math.random() }))
     .sort((a, b) => a.sort - b.sort)

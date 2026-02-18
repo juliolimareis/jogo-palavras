@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 type DeckCard = Record<string, GameCard>;
 
 export const Vowels: GameCard["value"][] = ["A", "E", "I", "O", "U"];

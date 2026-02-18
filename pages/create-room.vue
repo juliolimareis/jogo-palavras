@@ -103,7 +103,7 @@
 
 <script setup lang="ts">
 
-const { $io, $idUser } = useNuxtApp();
+const { /*$io*/ $idUser } = useNuxtApp();
 
 const errors = ref<string[]>([]);
 
@@ -119,13 +119,13 @@ const roomData = ref<RoomData>({
 });
 
 onMounted(() => {
-  $io.on("create-room", (res: { idRoom: number, message: string, isCreated: boolean }) => {
-    if(res.isCreated){
-      window.location.replace(`/room/${res.idRoom}`);
-    }else{
-      linkRoom.value = `/room/${res.idRoom}`;
-    }
-  });
+  // $io.on("create-room", (res: { idRoom: number, message: string, isCreated: boolean }) => {
+  //   if(res.isCreated){
+  //     window.location.replace(`/room/${res.idRoom}`);
+  //   }else{
+  //     linkRoom.value = `/room/${res.idRoom}`;
+  //   }
+  // });
 
   // checkPlayerRoom($idUser).then(res => {
   //   if(res?.isInRoom && res?.idRoom){
@@ -171,7 +171,7 @@ const onCreate = () => {
 
   isLoading.value = true;
 
-  $io.emit("create-room", roomData.value);
+  // $io.emit("create-room", roomData.value);
 
   // createRoom(roomData.value).then((res) => {
   //   if(res.body?.idRoom){

@@ -1,3 +1,5 @@
+
+// Result
 export function identTotalScore(results: Result[]) {
   const roundsSet = new Set<number>(results.map(r => r.round).reverse());
   const resultPerRound: Record<string, Result[]> = {};
@@ -9,6 +11,7 @@ export function identTotalScore(results: Result[]) {
   return resultPerRound;
 }
 
+// Result
 export function getTotalScorePlayers(results: Record<string, Result[]>, handCardsPerPlayer: HandCardsPerPlayer[]){
   const totalScorePlayer = [] as TotalScorePlayer[];
   const playersData = [] as Result[];
@@ -23,7 +26,7 @@ export function getTotalScorePlayers(results: Record<string, Result[]>, handCard
     allResults.map(ar => ar.idPlayer)
   );
 
-  for (let result of allResults) {
+  for (const result of allResults) {
     idPlayersSet.forEach(idPlayer => {
       if(result.idPlayer === idPlayer){
         if(!playersData.some(pd => pd.idPlayer === idPlayer)){

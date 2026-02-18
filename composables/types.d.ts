@@ -1,4 +1,4 @@
-import { Socket, } from "socket.io";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 declare global {
   // dados que o cliente envia

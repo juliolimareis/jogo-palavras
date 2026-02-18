@@ -1,6 +1,6 @@
-import { Server, Socket, } from "socket.io";
+// import { Server, Socket, } from "socket.io";
 
-interface SocketGame extends Server {
+interface SocketGame {
   rooms: Room[]
 }
 
@@ -43,249 +43,249 @@ export default function socketIO(io: SocketGame) {
     ];
   }
 
-  io.on("connection", (socket) => {
-    let idRoom = "";
-    let idUser = "";
-    let userName = "";
+  // io.on("connection", (socket) => {
+  //   let idRoom = "";
+  //   let idUser = "";
+  //   let userName = "";
 
-    console.log("connected !");
+  //   console.log("connected !");
 
-    socket.on("check-room", data => {
-      const room = getRoom(data.idRoom);
+  //   socket.on("check-room", data => {
+  //     const room = getRoom(data.idRoom);
 
-      if(room){
-        return socket.emit("check-room", {
-          idRoom: room.id,
-          roomExists: true,
-          message: "room exist.",
-          idAdmin: room.idAdmin,
-          gameReady: !!(room.gameReady),
-          maxRounds: room.maxRounds,
-          roomIsFull: room.players.length >= room.maxPlayers,
-          maxPlayers: room.maxPlayers,
-          roundTimeout: room.roundTimeout,
-          type: room.type
-        } as CheckRoomResponse);
-      }
+  //     if(room){
+  //       return socket.emit("check-room", {
+  //         idRoom: room.id,
+  //         roomExists: true,
+  //         message: "room exist.",
+  //         idAdmin: room.idAdmin,
+  //         gameReady: !!(room.gameReady),
+  //         maxRounds: room.maxRounds,
+  //         roomIsFull: room.players.length >= room.maxPlayers,
+  //         maxPlayers: room.maxPlayers,
+  //         roundTimeout: room.roundTimeout,
+  //         type: room.type
+  //       } as CheckRoomResponse);
+  //     }
 
-      socket.emit("check-room", { roomExists: false, roomIsFull: false });
-    });
+  //     socket.emit("check-room", { roomExists: false, roomIsFull: false });
+  //   });
 
-    socket.on("create-room", data => {
-      const roomPlayer = getRoomPlayer(data.idAdmin);
+  //   socket.on("create-room", data => {
+  //     const roomPlayer = getRoomPlayer(data.idAdmin);
 
-      if(roomPlayer){
-        return socket.emit("create-room",
-          { idRoom: roomPlayer.id, message: "player in room.", isCreated: false }
-        );
-      }
+  //     if(roomPlayer){
+  //       return socket.emit("create-room",
+  //         { idRoom: roomPlayer.id, message: "player in room.", isCreated: false }
+  //       );
+  //     }
 
-      const id = socket.id;
+  //     const id = socket.id;
 
-      io.rooms.push({
-        ...data,
-        id,
-        round: 0,
-        deck: [],
-        results: [],
-        players: [],
-        tableCards: [],
-        // idAdmin: data.idAdmin
-      });
+  //     io.rooms.push({
+  //       ...data,
+  //       id,
+  //       round: 0,
+  //       deck: [],
+  //       results: [],
+  //       players: [],
+  //       tableCards: [],
+  //       // idAdmin: data.idAdmin
+  //     });
 
-      console.log("room is created", io.rooms);
+  //     console.log("room is created", io.rooms);
 
-      socket.emit("create-room", { idRoom: id, message: "room created.", isCreated: true });
-    });
+  //     socket.emit("create-room", { idRoom: id, message: "room created.", isCreated: true });
+  //   });
 
-    socket.on("message", async (message: PlayerData) => {
-      const playerData: PlayerData = message;
+  //   socket.on("message", async (message: PlayerData) => {
+  //     const playerData: PlayerData = message;
 
-      switch (playerData.channel) {
-      case "give-up":
-        giveUpPlayer(idRoom, idUser);
-        break;
-      case "confirm-round":
-        await handleConfirmRound(idRoom, idUser, playerData?.data?.confirm);
-        break;
-      case "attack":
-        if(idRoom && idUser && userName && playerData.data?.result && playerData.data?.cardsIds){
-          if(handleAttack(idUser, playerData.data.result, playerData.data.cardsIds)){
-            emitAll(
-              idRoom, {
-                channel: "attack",
-                data: { results: getResultsRoom(idRoom) }
-              }
-            );
+  //     switch (playerData.channel) {
+  //     case "give-up":
+  //       giveUpPlayer(idRoom, idUser);
+  //       break;
+  //     case "confirm-round":
+  //       await handleConfirmRound(idRoom, idUser, playerData?.data?.confirm);
+  //       break;
+  //     case "attack":
+  //       if(idRoom && idUser && userName && playerData.data?.result && playerData.data?.cardsIds){
+  //         if(handleAttack(idUser, playerData.data.result, playerData.data.cardsIds)){
+  //           emitAll(
+  //             idRoom, {
+  //               channel: "attack",
+  //               data: { results: getResultsRoom(idRoom) }
+  //             }
+  //           );
 
-            emit(
-              idRoom, idUser, {
-                channel: "refresh-hand",
-                data: { handCards: await getHandCardsPlayer(idRoom, idUser) }
-              }
-            );
-          }
-        }
-        break;
-      case "finish-round":
-        console.log("[finished-round]");
+  //           emit(
+  //             idRoom, idUser, {
+  //               channel: "refresh-hand",
+  //               data: { handCards: await getHandCardsPlayer(idRoom, idUser) }
+  //             }
+  //           );
+  //         }
+  //       }
+  //       break;
+  //     case "finish-round":
+  //       console.log("[finished-round]");
 
-        addWordPlayerInResults(idRoom, idUser, playerData.data.cards as GameCard[]);
+  //       addWordPlayerInResults(idRoom, idUser, playerData.data.cards as GameCard[]);
 
-        if(getRoom(idRoom)?.endGame){
-          console.log("[finished-round] end-game");
+  //       if(getRoom(idRoom)?.endGame){
+  //         console.log("[finished-round] end-game");
 
-          emitAll( //retorna os dados com os pontos torais de cada jogador
-            idRoom, {
-              channel: "end-game",
-              data: getHandCardsPlayers(idRoom)
-            } as ServerData<HandCardsPerPlayer[]>
-          );
-        }
+  //         emitAll( //retorna os dados com os pontos torais de cada jogador
+  //           idRoom, {
+  //             channel: "end-game",
+  //             data: getHandCardsPlayers(idRoom)
+  //           } as ServerData<HandCardsPerPlayer[]>
+  //         );
+  //       }
 
-        console.log("result-round");
+  //       console.log("result-round");
 
-        emitAll( // retorna results da room, para o front calcular como esta o rank no momento
-          idRoom, {
-            channel: "result-round",
-            data: getResultsRoom(idRoom)
-          } as ServerData<Result[]>
-        );
+  //       emitAll( // retorna results da room, para o front calcular como esta o rank no momento
+  //         idRoom, {
+  //           channel: "result-round",
+  //           data: getResultsRoom(idRoom)
+  //         } as ServerData<Result[]>
+  //       );
 
-        break;
-      case "game-start":
-        if(isAdmin(idUser, idRoom)){
-          startGame(idRoom);
-        }
-        break;
-      case "enter-room":
-        idUser = playerData.idUser ?? "";
-        idRoom = playerData.idRoom ?? "";
-        userName = playerData.name ?? "";
+  //       break;
+  //     case "game-start":
+  //       if(isAdmin(idUser, idRoom)){
+  //         startGame(idRoom);
+  //       }
+  //       break;
+  //     case "enter-room":
+  //       idUser = playerData.idUser ?? "";
+  //       idRoom = playerData.idRoom ?? "";
+  //       userName = playerData.name ?? "";
 
-        console.log("enter-room");
+  //       console.log("enter-room");
 
-        if(addPlayerInRoom(playerData, socket)){
-          emitAll(
-            idRoom, {
-              channel: "players-in-room",
-              data: getServerDataPlayerInRoom(idRoom)
-            } as ServerData<ServerDataPlayerInRoom[]>
-          );
-        }
-        break;
-      case "enter-game":
-        console.warn("[enter-game] Try enter game.");
+  //       if(addPlayerInRoom(playerData, socket)){
+  //         emitAll(
+  //           idRoom, {
+  //             channel: "players-in-room",
+  //             data: getServerDataPlayerInRoom(idRoom)
+  //           } as ServerData<ServerDataPlayerInRoom[]>
+  //         );
+  //       }
+  //       break;
+  //     case "enter-game":
+  //       console.warn("[enter-game] Try enter game.");
 
-        let isReconnect = false;
+  //       let isReconnect = false;
 
-        if(!idUser && !idRoom && !userName){
-          console.warn("[enter-game] fist entry");
+  //       if(!idUser && !idRoom && !userName){
+  //         console.warn("[enter-game] fist entry");
 
-          idUser = playerData.idUser ?? "";
-          idRoom = playerData.idRoom ?? "";
-          userName = playerData.name ?? "";
+  //         idUser = playerData.idUser ?? "";
+  //         idRoom = playerData.idRoom ?? "";
+  //         userName = playerData.name ?? "";
 
-          isReconnect = true;
-        }else{
-          console.warn("[enter-game] game continue");
-        }
+  //         isReconnect = true;
+  //       }else{
+  //         console.warn("[enter-game] game continue");
+  //       }
 
-        if(getRoomPlayer(idUser)){
-          let ws;
+  //       if(getRoomPlayer(idUser)){
+  //         let ws;
 
-          if(isReconnect){
-            ws = socket;
-          }
+  //         if(isReconnect){
+  //           ws = socket;
+  //         }
 
-          const data = getServerDataPlayerInGame(idRoom, idUser, ws);
+  //         const data = getServerDataPlayerInGame(idRoom, idUser, ws);
 
-          if(data){
-            console.warn("[enter-game] emit: player-in-game");
+  //         if(data){
+  //           console.warn("[enter-game] emit: player-in-game");
 
-            emit(
-              idRoom,
-              idUser,
-                {
-                  channel: "player-in-game",
-                  data
-                } as ServerData<ServerDataPlayerInGame>
-            );
-          }else{
-            console.warn("[enter-game] room not found or gameReady failed");
-          }
-        }else{
-          socket.emit("player-not-found-in-room", {});
-          console.warn("[enter-game] Player not found in room");
-        }
+  //           emit(
+  //             idRoom,
+  //             idUser,
+  //               {
+  //                 channel: "player-in-game",
+  //                 data
+  //               } as ServerData<ServerDataPlayerInGame>
+  //           );
+  //         }else{
+  //           console.warn("[enter-game] room not found or gameReady failed");
+  //         }
+  //       }else{
+  //         socket.emit("player-not-found-in-room", {});
+  //         console.warn("[enter-game] Player not found in room");
+  //       }
 
-        break;
-      case "set-name":
-        userName = playerData.data.name;
+  //       break;
+  //     case "set-name":
+  //       userName = playerData.data.name;
 
-        setName(idRoom, idUser, userName);
-        emitAll(
-          idRoom, {
-            channel: "players-in-room",
-            data: getServerDataPlayerInRoom(idRoom)
-          } as ServerData<ServerDataPlayerInRoom[]>
-        );
-        break;
-      case "set-ready":
-        setReady(idRoom, idUser, !!(playerData.data?.isReady));
-        emitAll(
-          idRoom, {
-            channel: "players-in-room",
-            data: getServerDataPlayerInRoom(idRoom)
-          } as ServerData<ServerDataPlayerInRoom[]>
-        );
-        break;
-      case "game-restart":
-        restartGame(idRoom, idUser);
+  //       setName(idRoom, idUser, userName);
+  //       emitAll(
+  //         idRoom, {
+  //           channel: "players-in-room",
+  //           data: getServerDataPlayerInRoom(idRoom)
+  //         } as ServerData<ServerDataPlayerInRoom[]>
+  //       );
+  //       break;
+  //     case "set-ready":
+  //       setReady(idRoom, idUser, !!(playerData.data?.isReady));
+  //       emitAll(
+  //         idRoom, {
+  //           channel: "players-in-room",
+  //           data: getServerDataPlayerInRoom(idRoom)
+  //         } as ServerData<ServerDataPlayerInRoom[]>
+  //       );
+  //       break;
+  //     case "game-restart":
+  //       restartGame(idRoom, idUser);
 
-        console.warn("[game-restart] emitAll: game-restart");
+  //       console.warn("[game-restart] emitAll: game-restart");
 
-        emitAll(
-          idRoom,
-              {
-                channel: "game-restart",
-                data: {}
-              } as ServerData
-        );
-        break;
-      case "chat-message":
-        if(
-          userName.trim()
-                && typeof playerData.data.message === "string"
-                  && playerData.data.message.trim()
-        ){
-          emitAll(
-            idRoom, {
-              channel: "chat-message",
-              data: { message: `${userName}: ${playerData.data.message}` }
-            } as ServerData<DataChat>
-          );
-        }
-        break;
-      default:
-        break;
-      }
-    });
+  //       emitAll(
+  //         idRoom,
+  //             {
+  //               channel: "game-restart",
+  //               data: {}
+  //             } as ServerData
+  //       );
+  //       break;
+  //     case "chat-message":
+  //       if(
+  //         userName.trim()
+  //               && typeof playerData.data.message === "string"
+  //                 && playerData.data.message.trim()
+  //       ){
+  //         emitAll(
+  //           idRoom, {
+  //             channel: "chat-message",
+  //             data: { message: `${userName}: ${playerData.data.message}` }
+  //           } as ServerData<DataChat>
+  //         );
+  //       }
+  //       break;
+  //     default:
+  //       break;
+  //     }
+  //   });
 
-    socket.on("disconnect", (code, reason) => {
-      console.log("reason: %s:", reason);
-      console.log("code: %s:", code);
+  //   socket.on("disconnect", (code, reason) => {
+  //     console.log("reason: %s:", reason);
+  //     console.log("code: %s:", code);
 
-      removePlayer(idRoom, idUser);
+  //     removePlayer(idRoom, idUser);
 
-      emitAll(
-        idRoom, {
-          channel: "players-in-room",
-          data: getServerDataPlayerInRoom(idRoom)
-        } as ServerData<ServerDataPlayerInRoom[]>
-      );
-    });
-  });
+  //     emitAll(
+  //       idRoom, {
+  //         channel: "players-in-room",
+  //         data: getServerDataPlayerInRoom(idRoom)
+  //       } as ServerData<ServerDataPlayerInRoom[]>
+  //     );
+  //   });
+  // });
 
   // ======================= FUNCTIONS PROCESS ==================================
 
@@ -982,7 +982,7 @@ export default function socketIO(io: SocketGame) {
   function getHand(deck: GameCard[]){
     const hand = [];
 
-    for(let i in Array.from(Array(7))){
+    for(const i in Array.from(Array(7))){
       hand.push(deck[0]);
       deck.shift();
     }
@@ -991,7 +991,7 @@ export default function socketIO(io: SocketGame) {
   }
 
   function getCardShield(deckSize: number, type: Room["type"]) {
-    let cardsLatters = type === "jp" ? getJpCardsLatters() : getCardsLatters();
+    const cardsLatters = type === "jp" ? getJpCardsLatters() : getCardsLatters();
     const shieldCard = cardsLatters[Math.floor(Math.random() * cardsLatters.length)];
 
     shieldCard.isShield = true;
@@ -1078,11 +1078,11 @@ export default function socketIO(io: SocketGame) {
 
     const getCardCopy = (value: string) => ({ ...Cards[value] });
 
-    for(let i in Array.from(Array(vowels))){
+    for(const i in Array.from(Array(vowels))){
       Vowels.forEach(v => deck.push(getCardCopy(v)));
     }
 
-    for(let i in Array.from(Array(consonants))){
+    for(const i in Array.from(Array(consonants))){
       Object.keys(Cards).forEach(k => {
         if(!Vowels.includes(k) && k !== "?" && k !== "ATK"){
           deck.push(getCardCopy(k));
@@ -1090,11 +1090,11 @@ export default function socketIO(io: SocketGame) {
       });
     }
 
-    for(let i in Array.from(Array(joker))){
+    for(const i in Array.from(Array(joker))){
       deck.push(getCardCopy("?"));
     }
 
-    for(let i in Array.from(Array(atk))){
+    for(const i in Array.from(Array(atk))){
       deck.push(getCardCopy("ATK"));
     }
 
@@ -1110,11 +1110,11 @@ export default function socketIO(io: SocketGame) {
 
     const getCard = (value: string) => ({ ...Cards[value] });
 
-    for(let i in Array.from(Array(vowels))){
+    for(const i in Array.from(Array(vowels))){
       Vowels.forEach(v => deck.push(getCard(v)));
     }
 
-    for(let i in Array.from(Array(consonants))){
+    for(const i in Array.from(Array(consonants))){
       Object.keys(Cards).forEach(k => {
         if(!Vowels.includes(k) && k !== "?" && k !== "ATK" && k !== "Ç"){
           deck.push(getCard(k));
@@ -1132,11 +1132,11 @@ export default function socketIO(io: SocketGame) {
       });
     }
 
-    for(let i in Array.from(Array(joker))){
+    for(const i in Array.from(Array(joker))){
       deck.push(getCard("?"));
     }
 
-    for(let i in Array.from(Array(atk))){
+    for(const i in Array.from(Array(atk))){
       deck.push(getCard("ATK"));
     }
 
